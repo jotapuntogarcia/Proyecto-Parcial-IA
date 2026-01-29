@@ -2,14 +2,34 @@ import pygame
 import constantes
 from personaje import Personaje
 
-jugador = Personaje(50, 50)
-
-pygame.init()
+pygame.init() 
 
 ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA, 
                                   constantes.ALTO_VENTANA))
 
+
 pygame.display.set_caption("El Muchacho Dembow")
+
+
+def escalar_img(image, scale):
+    w = image.get_width()
+    h = image.get_height()
+    nueva_imagen = pygame.transform.scale(image, (w*scale, h*scale))
+    return nueva_imagen
+
+animaciones = []
+for i in range(7):
+    img = pygame.image.load(
+        f"assets/images/characters/player/Player_{i}.png"
+    ).convert_alpha()
+    
+    img = escalar_img(img, constantes.SCALA_PERSONAJE)
+    animaciones.append(img)
+
+
+ 
+jugador = Personaje(50, 50, animaciones)
+
 
 
 #variables movimientos jugador
