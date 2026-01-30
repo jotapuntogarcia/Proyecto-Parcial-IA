@@ -48,6 +48,8 @@ run=True
 
 while run == True:
     
+    
+    
     #MOVER A 60FPS
     
     reloj.tick(constantes.FPS)
@@ -73,6 +75,8 @@ while run == True:
     #mover jugador
     
     jugador.movimiento(delta_x, delta_y)
+    
+    jugador.update()
     
     
     
