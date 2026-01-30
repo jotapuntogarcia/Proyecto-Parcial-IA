@@ -1,6 +1,7 @@
 import pygame
 import constantes
 from personaje import Personaje
+from weapons import Weapon
 
 pygame.init() 
 
@@ -17,6 +18,9 @@ def escalar_img(image, scale):
     nueva_imagen = pygame.transform.scale(image, (w*scale, h*scale))
     return nueva_imagen
 
+
+#importa imagenes
+#personaje
 animaciones = []
 for i in range(7):
     img = pygame.image.load(
@@ -25,9 +29,19 @@ for i in range(7):
     
     img = escalar_img(img, constantes.SCALA_PERSONAJE)
     animaciones.append(img)
+    
+#arma
+    
+imagen_pistola = pygame.image.load(f"assets/images/weapons/gun.png")
+imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 
 
- 
+#crear arma clase weapon
+
+pistola = Weapon(imagen_pistola)
+
+
+#crear jugador de la clase personake 
 jugador = Personaje(50, 50, animaciones)
 
 
@@ -76,12 +90,20 @@ while run == True:
     
     jugador.movimiento(delta_x, delta_y)
     
+    
+    #actualizar estado jugador
     jugador.update()
     
+    #actualizar estado de arma
     
+    pistola.update(jugador)
     
+    #dibujar al jugador
     jugador.dibujar(ventana)
     
+    #dibujar el arma
+    
+    pistola.dibujar(ventana)
     
     for event in pygame.event.get():
         
