@@ -1,5 +1,6 @@
 import pygame
 import constantes
+import math
 
 class Weapon():
     def __init__(self, image):
@@ -19,6 +20,16 @@ class Weapon():
             self.rotar_arma(True)   
         #self.forma.y = self.forma.y + 3 #para bajar o subir un poco mas el arma de la mano
         
+        
+        #mover la pistola con mouse
+        mouse_pos = pygame.mouse.get_pos()
+        distancia_x = mouse_pos[0] - self.forma.centerx
+        distancia_y = -(mouse_pos[1] - self.forma.centery)
+        self.angulo = math.degrees(math.atan2(distancia_y, distancia_x))
+        
+        
+        
+        
     def rotar_arma(self, rotar):
         if rotar == True:
             imagen_flip = pygame.transform.flip(self.image_original, True, False)
@@ -29,6 +40,8 @@ class Weapon():
             self.imagen = pygame.transform.rotate(imagen_flip, self.angulo)                  
         
     def dibujar(self, interfaz):
+        self.imagen = pygame.transform.rotate(self.imagen,
+                                              self.angulo)
         interfaz.blit(self.imagen, self.forma)
         #ygame.draw.rect(interfaz, constantes.COLOR_ARMA, self.forma, 1)
                 
