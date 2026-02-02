@@ -1,47 +1,57 @@
 import pygame
-import constantes
 import math
+import constantes  
 
 class Weapon():
     def __init__(self, image):
         self.image_original = image
         self.angulo = 0
-        self.imagen = pygame.transform.rotate(self.image_original, self.angulo)
+        self.imagen = self.image_original
         self.forma = self.imagen.get_rect()
-        
-        
+
     def update(self, personaje):
-        self.forma.center = personaje.forma.center
-        if personaje.flip == False:
-            self.forma.x = self.forma.x + personaje.forma.width/2.5
-            self.rotar_arma(False)
-        if personaje.flip == True:
-            self.forma.x = self.forma.x - personaje.forma.width/2.5
-            self.rotar_arma(True)   
-        #self.forma.y = self.forma.y + 3 #para bajar o subir un poco mas el arma de la mano
+        #Obtener coordenadas
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        centro_x = personaje.forma.centerx
+        centro_y = personaje.forma.centery
+
+        # Calcular distancias
+        # Usamos distancia_x para calcular la elevación del mouse
+        # sin importar si está a la izquierda o derecha del personaje.
+        distancia_x = mouse_x - centro_x
+        distancia_y = -(mouse_y - centro_y) # Invertimos Y porque en pygame Y crece hacia abajo
+    
+        angulo = math.degrees(math.atan2(distancia_y, abs(distancia_x)))
+
+        #cuánto puede subir o bajar el arma, en grados
+        limite = 40 
+        self.angulo = max(-limite, min(limite, angulo))
+
+        #Offset para que el arma salga del costado del cuerpo
+        offset_arma = personaje.forma.width / 2.5
         
-        
-        #mover la pistola con mouse
-        mouse_pos = pygame.mouse.get_pos()
-        distancia_x = mouse_pos[0] - self.forma.centerx
-        distancia_y = -(mouse_pos[1] - self.forma.centery)
-        self.angulo = math.degrees(math.atan2(distancia_y, distancia_x))
-        
-        
-        
-        
-    def rotar_arma(self, rotar):
-        if rotar == True:
+        if personaje.flip:
+            #MIRANDO A LA IZQUIERDA
+            
+            # Movemos el arma a la izquierda del centro
+            self.forma.center = (centro_x - offset_arma, centro_y)
+            
+            # Volteamos la imagen del arma
             imagen_flip = pygame.transform.flip(self.image_original, True, False)
-            self.imagen = pygame.transform.rotate(imagen_flip, self.angulo)
-        
+            
+            self.imagen = pygame.transform.rotate(imagen_flip, -self.angulo)
+            
         else:
-            imagen_flip = pygame.transform.flip(self.image_original, False, False) 
-            self.imagen = pygame.transform.rotate(imagen_flip, self.angulo)                  
-        
+            #PERSONAJE MIRANDO A LA DERECHA
+            
+            self.forma.center = (centro_x + offset_arma, centro_y)
+            
+            imagen_normal = self.image_original
+            
+            self.imagen = pygame.transform.rotate(imagen_normal, self.angulo)
+
+        self.forma = self.imagen.get_rect(center=self.forma.center)
+
     def dibujar(self, interfaz):
-        self.imagen = pygame.transform.rotate(self.imagen,
-                                              self.angulo)
         interfaz.blit(self.imagen, self.forma)
-        #ygame.draw.rect(interfaz, constantes.COLOR_ARMA, self.forma, 1)
-                
+        # pygame.draw.rect(interfaz, constantes.COLOR_ARMA, self.forma, 1)
