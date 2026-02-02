@@ -36,6 +36,12 @@ imagen_pistola = pygame.image.load(f"assets/images/weapons/gun.png")
 imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 
 
+#balas
+
+imagen_balas = pygame.image.load(f"assets/images/weapons/bullet.png")
+imagen_balas = escalar_img(imagen_balas, constantes.SCALA_ARMA)
+
+
 #crear arma clase weapon
 
 pistola = Weapon(imagen_pistola)
