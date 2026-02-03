@@ -38,13 +38,17 @@ imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 
 #balas
 
-imagen_balas = pygame.image.load(f"assets/images/weapons/bullet.png")
+imagen_balas = pygame.image.load(f"assets/images/weapons/bullet.png").convert_alpha()
 imagen_balas = escalar_img(imagen_balas, constantes.SCALA_ARMA)
 
 
 #crear arma clase weapon
 
-pistola = Weapon(imagen_pistola)
+pistola = Weapon(imagen_pistola, imagen_balas)
+
+#crear grupo de sprites
+
+grupo_balas = pygame.sprite.Group()
 
 
 #crear jugador de la clase personake 
@@ -102,7 +106,13 @@ while run == True:
     
     #actualizar estado de arma
     
-    pistola.update(jugador)
+    bala = pistola.update(jugador)
+    if bala:
+        grupo_balas.add(bala)
+        
+    grupo_balas.update()
+        
+ 
     
     #dibujar al jugador
     jugador.dibujar(ventana)
@@ -110,6 +120,15 @@ while run == True:
     #dibujar el arma
     
     pistola.dibujar(ventana)
+    
+    
+    #dibujar balas
+    
+    for bala in grupo_balas:
+        bala.dibujar(ventana)
+    
+    
+    
     
     for event in pygame.event.get():
         
