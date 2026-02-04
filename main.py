@@ -1,5 +1,6 @@
 import pygame
 import constantes
+import random
 from personaje import Personaje
 from weapons import Weapon
 from enemigo import Enemigo
@@ -56,7 +57,7 @@ for i in range(8):
 animaciones_delivery = []
 for i in range (5):
     img = pygame.image.load(f"assets/images/characters/enemies/delivery/dev_{i}.png").convert_alpha()
-    img = escalar_img(img, 1.5)
+    img = escalar_img(img, constantes.SCALA_DELIVERY)
     animaciones_delivery.append(img)
     
 ultimo_delivery = pygame.time.get_ticks()    
@@ -93,6 +94,36 @@ guachiman = Enemigo(400, 300, animaciones_enemigo)
 guachiman2 = Enemigo(600, 200, animaciones_enemigo)
 lista_enemigos = [guachiman, guachiman2]
 
+#para que los enemigos aparezcan despues de iniciar
+
+def generar_posicion_enemigo():
+    if random.randint(0, 1) == 0:
+        x = random.choice ([-50, constantes.ANCHO_VENTANA + 50])
+        y = random.randint(0, constantes.ALTO_VENTANA)
+    else:
+        x = random.randint(0, constantes.ANCHO_VENTANA)
+        y = random.choice ([-50, constantes.ALTO_VENTANA])
+    return x, y
+    
+lista_enemigos = []
+for i in range (3):
+    x, y = generar_posicion_enemigo()
+    nuevo_guachi = Enemigo (x, y, animaciones_enemigo)
+    lista_enemigos.append(nuevo_guachi)
+
+#esperar un tiempo antes de que empiecen a aparecer
+
+tiempo_inicio_juego = pygame.time.get_ticks()
+delay_inicial = 2000
+
+
+#esperar para que salga delivery
+tiempo_actual = pygame.time.get_ticks()
+if tiempo_actual - tiempo_inicio_juego > delay_inicial:
+    if tiempo_actual - ultimo_delivery > 3000:
+        nuevo_delivery = Delivery(animaciones_delivery)
+        lista_enemigos.append(nuevo_delivery)
+        ultimo_delivery = tiempo_actual
 
 
 run=True
