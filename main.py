@@ -2,6 +2,7 @@ import pygame
 import constantes
 from personaje import Personaje
 from weapons import Weapon
+from enemigo import Enemigo
 
 pygame.init() 
 
@@ -41,6 +42,13 @@ imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 imagen_balas = pygame.image.load(f"assets/images/weapons/bullet.png").convert_alpha()
 imagen_balas = escalar_img(imagen_balas, constantes.SCALA_ARMA)
 
+#guachiman
+
+animaciones_enemigo = []
+for i in range(8):
+    img = pygame.image.load(f"assets/images/characters/enemies/guachiman/guachi_{i}.png").convert_alpha()
+    img = escalar_img(img, constantes.SCALA_ENEMIGO)
+    animaciones_enemigo.append(img)
 
 #crear arma clase weapon
 
@@ -66,6 +74,9 @@ mover_derecha = False
 #controlar framerate
     
 reloj = pygame.time.Clock()
+
+
+guachiman = Enemigo(400, 300, animaciones_enemigo)
 
 
 run=True
@@ -104,6 +115,9 @@ while run == True:
     #actualizar estado jugador
     jugador.update()
     
+    guachiman.move(jugador)
+    guachiman.update()
+    
     #actualizar estado de arma
     
     bala = pistola.update(jugador)
@@ -127,7 +141,9 @@ while run == True:
     for bala in grupo_balas:
         bala.dibujar(ventana)
     
+    #dibujar guachi
     
+    guachiman.dibujar(ventana)
     
     
     for event in pygame.event.get():
