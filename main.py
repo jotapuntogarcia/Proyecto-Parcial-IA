@@ -77,6 +77,9 @@ reloj = pygame.time.Clock()
 
 
 guachiman = Enemigo(400, 300, animaciones_enemigo)
+guachiman2 = Enemigo(600, 200, animaciones_enemigo)
+lista_enemigos = [guachiman, guachiman2]
+
 
 
 run=True
@@ -127,6 +130,20 @@ while run == True:
     grupo_balas.update()
         
  
+    for enemigo in lista_enemigos[:]:
+        enemigo.move(jugador)
+        enemigo.update()
+        enemigo.dibujar(ventana)
+        
+        colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
+        
+        if colision:
+            enemigo.vida -= 50
+            if enemigo.vida <= 0:
+                lista_enemigos.remove(enemigo)
+        
+ 
+ 
     
     #dibujar al jugador
     jugador.dibujar(ventana)
@@ -141,9 +158,6 @@ while run == True:
     for bala in grupo_balas:
         bala.dibujar(ventana)
     
-    #dibujar guachi
-    
-    guachiman.dibujar(ventana)
     
     
     for event in pygame.event.get():

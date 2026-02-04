@@ -9,11 +9,11 @@ class Enemigo():
         self.frame_index = 0
         self.update_time = pygame.time.get_ticks()
         self.image = self.animaciones[self.frame_index]
-        
+        self.vida = 100
         
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.velocidad = 2
+        self.velocidad = 1.8
         
     def move(self, jugador):
         dist_x = jugador.forma.centerx - self.rect.centerx
