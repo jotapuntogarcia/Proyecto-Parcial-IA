@@ -3,6 +3,7 @@ import constantes
 from personaje import Personaje
 from weapons import Weapon
 from enemigo import Enemigo
+from delivery import Delivery
 
 pygame.init() 
 
@@ -49,6 +50,18 @@ for i in range(8):
     img = pygame.image.load(f"assets/images/characters/enemies/guachiman/guachi_{i}.png").convert_alpha()
     img = escalar_img(img, constantes.SCALA_ENEMIGO)
     animaciones_enemigo.append(img)
+    
+#delivery
+
+animaciones_delivery = []
+for i in range (5):
+    img = pygame.image.load(f"assets/images/characters/enemies/delivery/dev_{i}.png").convert_alpha()
+    img = escalar_img(img, 1.5)
+    animaciones_delivery.append(img)
+    
+ultimo_delivery = pygame.time.get_ticks()    
+    
+    
 
 #crear arma clase weapon
 
@@ -129,7 +142,15 @@ while run == True:
         
     grupo_balas.update()
         
+        
+    tiempo_actual = pygame.time.get_ticks()    
+        
+    if tiempo_actual - ultimo_delivery > 3000:
+        nuevo_delivery = Delivery(animaciones_delivery)
+        lista_enemigos.append(nuevo_delivery)
+        ultimo_delivery = tiempo_actual
  
+ #bluce de enemigos
     for enemigo in lista_enemigos[:]:
         enemigo.move(jugador)
         enemigo.update()
