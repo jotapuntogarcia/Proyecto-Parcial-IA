@@ -15,6 +15,9 @@ class Personaje():
         self.image = animaciones[self.frame_index] 
         self.forma = self.image.get_rect()
         self.forma.center = (x, y)
+        self.vida = 100
+        self.vivo = True
+
         
     def movimiento(self, delta_x, delta_y):
         if delta_x < 0:

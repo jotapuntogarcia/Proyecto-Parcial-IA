@@ -125,6 +125,12 @@ if tiempo_actual - tiempo_inicio_juego > delay_inicial:
         lista_enemigos.append(nuevo_delivery)
         ultimo_delivery = tiempo_actual
 
+#vida del personaje
+def dibujar_vida(interfaz, x, y, vida):
+    ratio = vida / 100
+    pygame.draw.rect(interfaz, (50, 50, 50), (x - 2, y - 2, 204 , 24))
+    pygame.draw.rect(interfaz, (255, 0, 0), (x, y, 200 * ratio, 20))
+
 
 run=True
 
@@ -186,6 +192,18 @@ while run == True:
         enemigo.move(jugador)
         enemigo.update()
         enemigo.dibujar(ventana)
+        if jugador.forma.colliderect(enemigo.rect):
+            
+            if isinstance(enemigo, Delivery):
+                jugador.vida -= 20
+                lista_enemigos.remove(enemigo)
+                
+            else:
+                jugador.vida -= 0.5
+                
+    if jugador.vida <= 0:
+        jugador.vida = 0
+        jugador.vivo = False                
         
         colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
         
@@ -245,7 +263,7 @@ while run == True:
                 mover_abajo = False    
                                    
                     
-            
+    dibujar_vida(ventana, 20, 20, jugador.vida)        
             
     pygame.display.update()
     
