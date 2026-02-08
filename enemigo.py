@@ -1,6 +1,7 @@
 import pygame
 import math
 import constantes
+from proyectiles import Botella
 
 class Enemigo():
     def __init__(self, x, y, animaciones):
