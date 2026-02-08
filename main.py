@@ -5,6 +5,7 @@ from personaje import Personaje
 from weapons import Weapon
 from enemigo import Enemigo
 from delivery import Delivery
+from proyectiles import Botella
 
 pygame.init() 
 
@@ -18,8 +19,19 @@ pygame.display.set_caption("El Muchacho Dembow")
 def escalar_img(image, scale):
     w = image.get_width()
     h = image.get_height()
-    nueva_imagen = pygame.transform.scale(image, (w*scale, h*scale))
+    nueva_imagen = pygame.transform.scale(image, (int(w*scale), int(h*scale)))
     return nueva_imagen
+
+def generar_posicion_enemigo():
+    if random.randint(0, 1) == 0:
+        x = random.choice([-50, constantes.ANCHO_VENTANA + 50])
+        y = random.randint(0, constantes.ALTO_VENTANA)
+    else:
+        x = random.randint(0, constantes.ANCHO_VENTANA)
+        y = random.choice([-50, constantes.ALTO_VENTANA +50])
+        
+    return x,y     
+        
 
 
 #importa imagenes
@@ -47,10 +59,20 @@ imagen_balas = escalar_img(imagen_balas, constantes.SCALA_ARMA)
 #guachiman
 
 animaciones_enemigo = []
-for i in range(8):
-    img = pygame.image.load(f"assets/images/characters/enemies/guachiman/guachi_{i}.png").convert_alpha()
+for i in range(6):
+    img = pygame.image.load(f"assets/images/characters/enemies/guachiman/run/run_{i}.png").convert_alpha()
     img = escalar_img(img, constantes.SCALA_ENEMIGO)
     animaciones_enemigo.append(img)
+    
+animaciones_ataque_guachi = []
+for i in range (5):
+    img = pygame.image.load(f"assets/images/characters/enemies/guachiman/attack/ataque_{i}.png").convert_alpha()
+    img = escalar_img(img, constantes.SCALA_ENEMIGO)
+    animaciones_ataque_guachi.append(img)
+
+# Cargar botella ANTES de crear enemigos
+img_botella = pygame.image.load("assets/images/weapons/botella.png").convert_alpha()
+img_botella = escalar_img(img_botella, 0.8)    
     
 #delivery
 
@@ -71,10 +93,12 @@ pistola = Weapon(imagen_pistola, imagen_balas)
 #crear grupo de sprites
 
 grupo_balas = pygame.sprite.Group()
+grupo_botellas_enemigas = pygame.sprite.Group()
 
 
 #crear jugador de la clase personake 
 jugador = Personaje(50, 50, animaciones)
+jugador.rect = jugador.forma # CORRECCION: Referencia necesaria para spritecollideany
 
 
 
@@ -90,25 +114,12 @@ mover_derecha = False
 reloj = pygame.time.Clock()
 
 
-guachiman = Enemigo(400, 300, animaciones_enemigo)
-guachiman2 = Enemigo(600, 200, animaciones_enemigo)
-lista_enemigos = [guachiman, guachiman2]
-
 #para que los enemigos aparezcan despues de iniciar
-
-def generar_posicion_enemigo():
-    if random.randint(0, 1) == 0:
-        x = random.choice ([-50, constantes.ANCHO_VENTANA + 50])
-        y = random.randint(0, constantes.ALTO_VENTANA)
-    else:
-        x = random.randint(0, constantes.ANCHO_VENTANA)
-        y = random.choice ([-50, constantes.ALTO_VENTANA])
-    return x, y
     
 lista_enemigos = []
 for i in range (3):
     x, y = generar_posicion_enemigo()
-    nuevo_guachi = Enemigo (x, y, animaciones_enemigo)
+    nuevo_guachi = Enemigo (x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
     lista_enemigos.append(nuevo_guachi)
 
 #esperar un tiempo antes de que empiecen a aparecer
@@ -116,14 +127,6 @@ for i in range (3):
 tiempo_inicio_juego = pygame.time.get_ticks()
 delay_inicial = 2000
 
-
-#esperar para que salga delivery
-tiempo_actual = pygame.time.get_ticks()
-if tiempo_actual - tiempo_inicio_juego > delay_inicial:
-    if tiempo_actual - ultimo_delivery > 3000:
-        nuevo_delivery = Delivery(animaciones_delivery)
-        lista_enemigos.append(nuevo_delivery)
-        ultimo_delivery = tiempo_actual
 
 #vida del personaje
 def dibujar_vida(interfaz, x, y, vida):
@@ -144,6 +147,9 @@ while run == True:
     
     
     ventana.fill(constantes.COLOR_BG)
+    
+    #actualizar posicion del rect para colisiones
+    jugador.rect = jugador.forma
     
     #calcular movimeinto jugador
     
@@ -168,9 +174,6 @@ while run == True:
     #actualizar estado jugador
     jugador.update()
     
-    guachiman.move(jugador)
-    guachiman.update()
-    
     #actualizar estado de arma
     
     bala = pistola.update(jugador)
@@ -190,8 +193,21 @@ while run == True:
  #bluce de enemigos
     for enemigo in lista_enemigos[:]:
         enemigo.move(jugador)
-        enemigo.update()
+        
+        # CORRECCION: Verificar tipo de enemigo antes de update
+        nueva_botella = None
+        if isinstance(enemigo, Delivery):
+             enemigo.update() # Delivery no acepta argumentos
+        else:
+             # Recibir la posible botella lanzada (Guachiman si acepta jugador)
+             nueva_botella = enemigo.update(jugador)
+        
+        if nueva_botella:
+            grupo_botellas_enemigas.add(nueva_botella)
+            
         enemigo.dibujar(ventana)
+
+        # Colision jugador vs enemigo
         if jugador.forma.colliderect(enemigo.rect):
             
             if isinstance(enemigo, Delivery):
@@ -200,18 +216,30 @@ while run == True:
                 
             else:
                 jugador.vida -= 0.5
-                
+
+        # Colision balas vs enemigo
+        colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
+        if colision:
+            enemigo.vida -= 50
+            if enemigo.vida <= 0:
+                if enemigo in lista_enemigos:
+                    lista_enemigos.remove(enemigo)
+
+    # Logica de vida jugador
     if jugador.vida <= 0:
         jugador.vida = 0
         jugador.vivo = False                
         
-        colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
-        
-        if colision:
-            enemigo.vida -= 50
-            if enemigo.vida <= 0:
-                lista_enemigos.remove(enemigo)
-        
+    
+    grupo_botellas_enemigas.update()
+    grupo_botellas_enemigas.draw(ventana)
+    
+    # CORRECCION: Pasar el objeto 'jugador' (que tiene .rect), no 'jugador.forma'
+    hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
+    if hit:
+        jugador.vida -= 15
+        hit.kill()
+            
  
  
     
@@ -240,13 +268,10 @@ while run == True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 mover_izquierda = True    
-        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_d:
                 mover_derecha = True  
-        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
                 mover_arriba = True
-        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
                 mover_abajo = True    
                         
@@ -269,4 +294,4 @@ while run == True:
     
     
     
-pygame.QUIT()
+pygame.quit()
