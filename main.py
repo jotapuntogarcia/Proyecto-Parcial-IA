@@ -133,6 +133,16 @@ for i in range (3):
 tiempo_inicio_juego = pygame.time.get_ticks()
 delay_inicial = 2000
 
+def dibujar_grid(ventana):
+    #lineas verticales
+    for c in range(constantes.COLUMNAS + 1):
+        pygame.draw.line(ventana, (255, 255, 255), (c * constantes.TILE_SIZE, 0), 
+                         (c * constantes.TILE_SIZE, constantes.ALTO_VENTANA))
+        #horizontales
+    for f in range(constantes.FILAS + 1):
+        pygame.draw.line(ventana, (255, 255, 255), (0, f * constantes.TILE_SIZE), 
+                         (constantes.ANCHO_VENTANA, f * constantes.TILE_SIZE))    
+        
 
 #vida del personaje
 def dibujar_vida(interfaz, x, y, vida):
@@ -302,7 +312,9 @@ while run == True:
                                    
     grupo_paredes.draw(ventana)
                     
-    dibujar_vida(ventana, 20, 20, jugador.vida)        
+    dibujar_vida(ventana, 20, 20, jugador.vida)
+    
+    dibujar_grid(ventana)        
             
     pygame.display.update()
     
