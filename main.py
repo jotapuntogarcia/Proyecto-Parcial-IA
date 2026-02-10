@@ -6,6 +6,7 @@ from weapons import Weapon
 from enemigo import Enemigo
 from delivery import Delivery
 from proyectiles import Botella
+from obstaculo import Pared
 
 pygame.init() 
 
@@ -94,9 +95,14 @@ pistola = Weapon(imagen_pistola, imagen_balas)
 
 grupo_balas = pygame.sprite.Group()
 grupo_botellas_enemigas = pygame.sprite.Group()
+grupo_paredes = pygame.sprite.Group()
+
+muro1 = Pared(300, 200, 200, 50)
+muro2 = Pared(300, 200, 50, 200)
+grupo_paredes.add(muro1, muro2)
 
 
-#crear jugador de la clase personake 
+#crear jugador de la clase personaje 
 jugador = Personaje(50, 50, animaciones)
 jugador.rect = jugador.forma # CORRECCION: Referencia necesaria para spritecollideany
 
@@ -173,6 +179,13 @@ while run == True:
     
     #actualizar estado jugador
     jugador.update()
+    
+    #colosionn jugador pared
+    hit_pared = pygame.sprite.spritecollideany(jugador, grupo_paredes)
+    if hit_pared:
+        jugador.rect.x -= delta_x
+        jugador.rect.y -= delta_y
+    
     
     #actualizar estado de arma
     
@@ -287,6 +300,7 @@ while run == True:
             if event.key == pygame.K_s:
                 mover_abajo = False    
                                    
+    grupo_paredes.draw(ventana)
                     
     dibujar_vida(ventana, 20, 20, jugador.vida)        
             
