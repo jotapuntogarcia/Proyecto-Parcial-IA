@@ -97,8 +97,16 @@ grupo_balas = pygame.sprite.Group()
 grupo_botellas_enemigas = pygame.sprite.Group()
 grupo_paredes = pygame.sprite.Group()
 
-muro1 = Pared(300, 200, 200, 50)
-muro2 = Pared(300, 200, 50, 200)
+
+#muro
+
+col_x = 8 * constantes.TILE_SIZE
+fila_y = 5 * constantes.TILE_SIZE
+
+#5 de ancho 1 de alto
+muro1 = Pared(col_x, fila_y, 5 * constantes.TILE_SIZE, 1 * constantes.TILE_SIZE)
+#1 de ancho y 5 de alto
+muro2 = Pared(col_x, fila_y, 1 * constantes.TILE_SIZE, 5 * constantes.TILE_SIZE)
 grupo_paredes.add(muro1, muro2)
 
 

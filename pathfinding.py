@@ -11,9 +11,9 @@ class Grilla:
         
         for pared in grupo_paredes:
             col_inicio = pared.rect.x  // constantes.TILE_SIZE
-            col_fin = (pared.rect.x + pared.rect.width) // constantes.TILE_SIZE
+            col_fin = (pared.rect.x + pared.rect.width - 1) // constantes.TILE_SIZE
             fila_inicio = pared.rect.y // constantes.TILE_SIZE
-            fila_fin = (pared.rect.y + pared.rect.height) // constantes.TILE_SIZE
+            fila_fin = (pared.rect.y + pared.rect.height - 1) // constantes.TILE_SIZE
             
         for col in range(col_inicio, col_fin + 1):
             for fila in range(fila_inicio, fila_fin + 1):
