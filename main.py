@@ -160,6 +160,11 @@ def dibujar_vida(interfaz, x, y, vida):
     pygame.draw.rect(interfaz, (50, 50, 50), (x - 2, y - 2, 204 , 24))
     pygame.draw.rect(interfaz, (255, 0, 0), (x, y, 200 * ratio, 20))
 
+#oleadas
+
+numero_oleada = 1
+enemigos_por_oleada = 3
+
 
 run=True
 
@@ -229,6 +234,21 @@ while run == True:
             enemigo.move(jugador)
         else: 
             enemigo.move(jugador, cerebro_ia, grupo_paredes)    
+            
+    #oledas
+    
+    if len(lista_enemigos) == 0: #si todos estan muertos
+        numero_oleada += 1
+        enemigos_por_oleada += 1 #cada ronda se suma otro
+        
+        print(f"OLEADA {numero_oleada} INICIADA")
+        
+        for _ in range(enemigos_por_oleada):
+            spawn_x = random.randint(50, 750)
+            spawn_y = random.randint(50, 550)
+            
+            nuevo_guachi = Enemigo(spawn_x, spawn_y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+            lista_enemigos.append(nuevo_guachi)        
         
         # CORRECCION: Verificar tipo de enemigo antes de update
         nueva_botella = None
