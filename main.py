@@ -7,6 +7,7 @@ from enemigo import Enemigo
 from delivery import Delivery
 from proyectiles import Botella
 from obstaculo import Pared
+from pathfinding import Grilla
 
 pygame.init() 
 
@@ -97,6 +98,7 @@ grupo_balas = pygame.sprite.Group()
 grupo_botellas_enemigas = pygame.sprite.Group()
 grupo_paredes = pygame.sprite.Group()
 
+cerebro_ia = Grilla()
 
 #muro
 
@@ -168,9 +170,9 @@ while run == True:
     #MOVER A 60FPS
     
     reloj.tick(constantes.FPS)
-    
-    
     ventana.fill(constantes.COLOR_BG)
+    
+    cerebro_ia.marcar_obstaculos(grupo_paredes)
     
     #actualizar posicion del rect para colisiones
     jugador.rect = jugador.forma
@@ -223,7 +225,10 @@ while run == True:
  
  #bluce de enemigos
     for enemigo in lista_enemigos[:]:
-        enemigo.move(jugador)
+        if isinstance(enemigo, Delivery):
+            enemigo.move(jugador)
+        else: 
+            enemigo.move(jugador, cerebro_ia)    
         
         # CORRECCION: Verificar tipo de enemigo antes de update
         nueva_botella = None
