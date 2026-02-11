@@ -29,18 +29,34 @@ class Grilla:
             fila_inicio = pared.rect.y // constantes.TILE_SIZE
             fila_fin = (pared.rect.y + pared.rect.height - 1) // constantes.TILE_SIZE
             
-        for col in range(col_inicio, col_fin + 1):
-            for fila in range(fila_inicio, fila_fin + 1):
-                if 0 <= col < constantes.COLUMNAS and 0  <= fila < constantes.FILAS:
-                    self.matriz[col][fila] = 1
+            #Marcamos todas las paredes dentro de la matriz
+            for col in range(col_inicio, col_fin + 1):
+                for fila in range(fila_inicio, fila_fin + 1):
+                    if 0 <= col < constantes.COLUMNAS and 0 <= fila < constantes.FILAS:
+                        self.matriz[col][fila] = 1
                
     def obtener_nodo(self, x, y):
         return x // constantes.TILE_SIZE, y // constantes.TILE_SIZE  
     
     def a_estrella(self, inicio_px, fin_px):
-        #psamos los pixiales a coord de las grillas
-        nodo_inicio = Nodo((inicio_px[0] // constantes.TILE_SIZE, inicio_px[1] // constantes.TILE_SIZE))
+        col_inicio = int(inicio_px[0] // constantes.TILE_SIZE)
+        fila_inicio = int(inicio_px[1] // constantes.TILE_SIZE)
+        col_fin = int(fin_px[0] // constantes.TILE_SIZE)
+        fila_fin = int(fin_px[1] // constantes.TILE_SIZE)
+
+        # Limitar para que no se salgan de la grilla  (que no se queden arriba)
+        col_inicio = max(0, min(col_inicio, constantes.COLUMNAS - 1))
+        fila_inicio = max(0, min(fila_inicio, constantes.FILAS - 1))
+        col_fin = max(0, min(col_fin, constantes.COLUMNAS - 1))
+        fila_fin = max(0, min(fila_fin, constantes.FILAS - 1))
+
+        nodo_inicio = Nodo((col_inicio, fila_inicio))
+        nodo_fin = Nodo((col_fin, fila_fin))
         
+        #Forzamos que donde están parados sea 0 para que no se bloqueen a sí mismos
+        self.matriz[col_inicio][fila_inicio] = 0
+        self.matriz[col_fin][fila_fin] = 0
+
         lista_abierta = []
         lista_cerrada = []
         lista_abierta.append(nodo_inicio)
@@ -72,13 +88,12 @@ class Grilla:
                 pos_vecino = (nodo_actual.pos[0] + nueva_posicion[0], nodo_actual.pos[1] + nueva_posicion[1])
                 
                 #limites mapa
-                
                 if pos_vecino[0] >= constantes.COLUMNAS or pos_vecino[0] < 0 or \
                    pos_vecino[1] >= constantes.FILAS or pos_vecino[1] < 0:
                        continue
                    
-                   #verificar si es una pared
-                if self.matriz[pos_vecino[0]][pos_vecino[1]] !=0:
+                #verificar si es una pared
+                if self.matriz[pos_vecino[0]][pos_vecino[1]] != 0:
                     continue
                 
                 nuevo_nodo = Nodo(pos_vecino, nodo_actual)
@@ -88,8 +103,15 @@ class Grilla:
                 if hijo in lista_cerrada:
                     continue
                 
+                #calcular costos
+                hijo.g = nodo_actual.g + 1
+                #Heurística corregida usando nodo_fin
+                hijo.h = ((hijo.pos[0] - nodo_fin.pos[0]) ** 2) + ((hijo.pos[1] - nodo_fin.pos[1]) ** 2)
+                hijo.f = hijo.g + hijo.h
+
+                if any(abierto for abierto in lista_abierta if hijo == abierto and hijo.g > abierto.g):
+                    continue
+                
                 lista_abierta.append(hijo)
                 
-        return []               
-                   
-                                                   
+        return []
