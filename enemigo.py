@@ -32,7 +32,7 @@ class Enemigo():
         self.ultimo_recalculo = 0 
         self.espera_recalculo = 500 #cada medio segundo
 
-    def move(self, jugador, cerebro_ia):
+    def move(self, jugador, cerebro_ia, grupo_paredes):
         
         tiempo_actual = pygame.time.get_ticks()
         
@@ -41,27 +41,20 @@ class Enemigo():
         dy_final = jugador.forma.centery - self.rect.centery
         distancia_al_jugador = math.sqrt(dx_final**2 + dy_final**2)
         
+        #enemigo ve al jugador
         tengo_vision = True
-        
-        linea_vision = pygame.draw.line(pygame.Surface((1,1)), (0, 0, 0), self.rect.center, jugador.forma.center)
         
         for pared in grupo_paredes:
             if pared.rect.clipline(self.rect.center, jugador.forma.center):
                 tengo_vision = False
                 break
             
+         #ataca si esta cerca y puede ver   
         if distancia_al_jugador <= self.distancia_ataque and tengo_vision:
             if tiempo_actual - self.ultimo_ataque > self.cooldown_ataque:
                 self.estado = "atacar"
-                self.ruta = []
-            return        
-        
-        #ataca o camina
-        if distancia_al_jugador <= self.distancia_ataque:
-            if tiempo_actual - self.ultimo_ataque > self.cooldown_ataque:
-                self.estado = "atacar"
                 self.ruta = [] #si ataca no camina
-            return    
+            return        
         
         #pathfinding
         if tiempo_actual - self.ultimo_recalculo > self.espera_recalculo:

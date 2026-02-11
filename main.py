@@ -228,7 +228,7 @@ while run == True:
         if isinstance(enemigo, Delivery):
             enemigo.move(jugador)
         else: 
-            enemigo.move(jugador, cerebro_ia)    
+            enemigo.move(jugador, cerebro_ia, grupo_paredes)    
         
         # CORRECCION: Verificar tipo de enemigo antes de update
         nueva_botella = None
