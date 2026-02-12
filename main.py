@@ -165,6 +165,10 @@ def dibujar_vida(interfaz, x, y, vida):
 numero_oleada = 1
 enemigos_por_oleada = 3
 
+#fondo
+
+img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
+fondo_redimensionado = pygame.transform.scale(img_fondo, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
 
 run=True
 
@@ -172,7 +176,7 @@ while run == True:
     
     #MOVER A 60FPS
     reloj.tick(constantes.FPS)
-    ventana.fill(constantes.COLOR_BG)
+    ventana.blit(fondo_redimensionado, (0, 0))
     
     cerebro_ia.marcar_obstaculos(grupo_paredes)
     
