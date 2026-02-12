@@ -170,10 +170,7 @@ run=True
 
 while run == True:
     
-    
-    
     #MOVER A 60FPS
-    
     reloj.tick(constantes.FPS)
     ventana.fill(constantes.COLOR_BG)
     
@@ -183,7 +180,6 @@ while run == True:
     jugador.rect = jugador.forma
     
     #calcular movimeinto jugador
-    
     delta_x = 0
     delta_y = 0
     
@@ -196,11 +192,8 @@ while run == True:
     if mover_abajo == True:
         delta_y = constantes.VELOCIDAD            
     
-    
     #mover jugador
-    
     jugador.movimiento(delta_x, delta_y)
-    
     
     #actualizar estado jugador
     jugador.update()
@@ -211,51 +204,48 @@ while run == True:
         jugador.rect.x -= delta_x
         jugador.rect.y -= delta_y
     
-    
     #actualizar estado de arma
-    
     bala = pistola.update(jugador)
     if bala:
         grupo_balas.add(bala)
         
     grupo_balas.update()
         
-        
     tiempo_actual = pygame.time.get_ticks()    
         
-    if tiempo_actual - ultimo_delivery > 3000:
+    if tiempo_actual - ultimo_delivery > 5000: #5 segundos cada uno
         nuevo_delivery = Delivery(animaciones_delivery)
         lista_enemigos.append(nuevo_delivery)
         ultimo_delivery = tiempo_actual
- 
- #bluce de enemigos
+        
+    #oledas
+    guachis_vivos = [e for e in lista_enemigos if isinstance(e, Enemigo)]
+    
+    if len(guachis_vivos) == 0: 
+        numero_oleada += 1
+        enemigos_por_oleada += 1 
+        
+        print(f"OLEADA {numero_oleada} INICIADA")
+        
+        for _ in range(enemigos_por_oleada):
+            x = random.randint(100, constantes.ANCHO_VENTANA - 100)
+            y = random.randint(100, constantes.ALTO_VENTANA - 100)
+            nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+            lista_enemigos.append(nuevo_guachi)        
+
+    #bluce de enemigos
     for enemigo in lista_enemigos[:]:
+        # MOVER
         if isinstance(enemigo, Delivery):
             enemigo.move(jugador)
         else: 
             enemigo.move(jugador, cerebro_ia, grupo_paredes)    
             
-    #oledas
-    
-    if len(lista_enemigos) == 0: #si todos estan muertos
-        numero_oleada += 1
-        enemigos_por_oleada += 1 #cada ronda se suma otro
-        
-        print(f"OLEADA {numero_oleada} INICIADA")
-        
-        for _ in range(enemigos_por_oleada):
-            spawn_x = random.randint(50, 750)
-            spawn_y = random.randint(50, 550)
-            
-            nuevo_guachi = Enemigo(spawn_x, spawn_y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
-            lista_enemigos.append(nuevo_guachi)        
-        
-        # CORRECCION: Verificar tipo de enemigo antes de update
+        # UPDATE
         nueva_botella = None
         if isinstance(enemigo, Delivery):
-             enemigo.update() # Delivery no acepta argumentos
+             enemigo.update() 
         else:
-             # Recibir la posible botella lanzada (Guachiman si acepta jugador)
              nueva_botella = enemigo.update(jugador)
         
         if nueva_botella:
@@ -263,17 +253,14 @@ while run == True:
             
         enemigo.dibujar(ventana)
 
-        # Colision jugador vs enemigo
+        # Colisiones
         if jugador.forma.colliderect(enemigo.rect):
-            
             if isinstance(enemigo, Delivery):
                 jugador.vida -= 20
-                lista_enemigos.remove(enemigo)
-                
+                if enemigo in lista_enemigos: lista_enemigos.remove(enemigo)
             else:
                 jugador.vida -= 0.5
 
-        # Colision balas vs enemigo
         colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
         if colision:
             enemigo.vida -= 50
@@ -285,72 +272,45 @@ while run == True:
     if jugador.vida <= 0:
         jugador.vida = 0
         jugador.vivo = False                
-        
     
     grupo_botellas_enemigas.update()
     grupo_botellas_enemigas.draw(ventana)
     
-    # CORRECCION: Pasar el objeto 'jugador' (que tiene .rect), no 'jugador.forma'
     hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
     if hit:
         jugador.vida -= 15
         hit.kill()
-            
- 
- 
     
     #dibujar al jugador
     jugador.dibujar(ventana)
     
     #dibujar el arma
-    
     pistola.dibujar(ventana)
     
-    
     #dibujar balas
-    
     for bala in grupo_balas:
         bala.dibujar(ventana)
     
-    
-    
     for event in pygame.event.get():
-        
         if event.type == pygame.QUIT:
-                
             run=False  
-    
         
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                mover_izquierda = True    
-            if event.key == pygame.K_d:
-                mover_derecha = True  
-            if event.key == pygame.K_w:
-                mover_arriba = True
-            if event.key == pygame.K_s:
-                mover_abajo = True    
+            if event.key == pygame.K_a: mover_izquierda = True    
+            if event.key == pygame.K_d: mover_derecha = True  
+            if event.key == pygame.K_w: mover_arriba = True
+            if event.key == pygame.K_s: mover_abajo = True    
                         
-        
-        #soltando la tecla
         if event.type == pygame.KEYUP: 
-            if event.key == pygame.K_a:
-                mover_izquierda = False  
-            if event.key == pygame.K_d:
-                mover_derecha = False 
-            if event.key == pygame.K_w:
-                mover_arriba = False
-            if event.key == pygame.K_s:
-                mover_abajo = False    
+            if event.key == pygame.K_a: mover_izquierda = False  
+            if event.key == pygame.K_d: mover_derecha = False 
+            if event.key == pygame.K_w: mover_arriba = False
+            if event.key == pygame.K_s: mover_abajo = False    
                                    
     grupo_paredes.draw(ventana)
-                    
     dibujar_vida(ventana, 20, 20, jugador.vida)
-    
     dibujar_grid(ventana)        
             
     pygame.display.update()
-    
-    
-    
+
 pygame.quit()
