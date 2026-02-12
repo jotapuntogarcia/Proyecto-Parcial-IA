@@ -10,17 +10,20 @@ class Delivery():
         self.update_time = pygame.time.get_ticks()
         self.image = self.animaciones[self.frame_index]
         self.rect = self.image.get_rect()
+        self.completado = False
         
         
         direccion = random.choice(["izquierda", "derecha"])
         
         if direccion == "izquerda":
             self.rect.x = -50
+            self.objetivo_x = constantes.ANCHO_VENTANA + 100
             self.velocidad = random.randint(6, 9)
             self.flip = False
         else:
             self.rect.x = constantes.ANCHO_VENTANA + 50
-            self.velocidad = random.randint(-9, -6)
+            self.objetivo_x = -100
+            self.velocidad = random.randint(6, 9)
             self.flip = True
             
         self.rect.y = random.randint(50, constantes.ALTO_VENTANA - 100)
@@ -28,8 +31,39 @@ class Delivery():
         self.vida = 50
         
           
-    def move(self, jugador= None):
-        self.rect.x += self.velocidad
+    def move(self, jugador, cerebro_ia, grupo_paredes):
+        destino = (self.objetivo_x, self.rect.centery)
+        
+        ruta = cerebro_ia.a_estrella(self.rect.center, destino)
+        
+        vel = abs(self.velocidad)
+        
+        if ruta and len(ruta) >1:
+            proximo_punto = ruta[1]
+            
+            if self.rect.centerx < proximo_punto[0]:
+                self.rect.x += vel
+            elif self.rect.centerx > proximo_punto[0]:
+                self.rect.x -= vel    
+             
+            if self.rect.centery < proximo_punto[1]:
+                self.rect.y += vel
+            elif self.rect.centery > proximo_punto[1]:
+                self.rect.y -= vel
+                
+        else:
+            if self.objetivo_x > constantes.ANCHO_VENTANA:
+                self.rect.x += vel
+            elif self.objetivo_x < 0:
+                self.rect.x -= vel            
+                
+                
+            if self.rect.x > constantes.ANCHO_VENTANA + 50 or self.rect.x  < -50:
+                self.completado = True
+                
+        if abs(self.rect.x - self.objetivo_x) <10:
+            pass        
+                        
         
         
     def update(self):

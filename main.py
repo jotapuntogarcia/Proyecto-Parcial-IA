@@ -237,7 +237,7 @@ while run == True:
     for enemigo in lista_enemigos[:]:
         # MOVER
         if isinstance(enemigo, Delivery):
-            enemigo.move(jugador)
+            enemigo.move(jugador, cerebro_ia, grupo_paredes)
         else: 
             enemigo.move(jugador, cerebro_ia, grupo_paredes)    
             
@@ -267,6 +267,10 @@ while run == True:
             if enemigo.vida <= 0:
                 if enemigo in lista_enemigos:
                     lista_enemigos.remove(enemigo)
+                        
+        if isinstance(enemigo, Delivery) and enemigo.completado:
+            if enemigo in lista_enemigos:
+                lista_enemigos.remove(enemigo)                
 
     # Logica de vida jugador
     if jugador.vida <= 0:
