@@ -12,7 +12,7 @@ from pathfinding import Grilla
 pygame.init() 
 
 ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA, 
-                                  constantes.ALTO_VENTANA))
+                                  constantes.ALTO_VENTANA), pygame.SCALED | pygame.FULLSCREEN)
 
 
 pygame.display.set_caption("El Muchacho Dembow")
@@ -102,13 +102,13 @@ cerebro_ia = Grilla()
 
 #muro
 
-col_x = 8 * constantes.TILE_SIZE
-fila_y = 5 * constantes.TILE_SIZE
+col_x = 9 * constantes.TILE_SIZE
+fila_y = 7 * constantes.TILE_SIZE
 
 #5 de ancho 1 de alto
-muro1 = Pared(col_x, fila_y, 5 * constantes.TILE_SIZE, 1 * constantes.TILE_SIZE)
+muro1 = Pared(col_x, fila_y, 5 * constantes.TILE_SIZE, 1 * constantes.TILE_SIZE)  #este cruza de la calle al colmado
 #1 de ancho y 5 de alto
-muro2 = Pared(col_x, fila_y, 1 * constantes.TILE_SIZE, 5 * constantes.TILE_SIZE)
+muro2 = Pared(col_x, fila_y, 1 * constantes.TILE_SIZE, 5 * constantes.TILE_SIZE)  #del colmado baja
 grupo_paredes.add(muro1, muro2)
 
 
@@ -169,6 +169,7 @@ enemigos_por_oleada = 3
 
 img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
 fondo_redimensionado = pygame.transform.scale(img_fondo, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
+
 
 run=True
 
@@ -304,10 +305,15 @@ while run == True:
             run=False  
         
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                run = False
+            if event.key == pygame.K_f:
+                pygame.display.toggle_fullscreen()    
             if event.key == pygame.K_a: mover_izquierda = True    
             if event.key == pygame.K_d: mover_derecha = True  
             if event.key == pygame.K_w: mover_arriba = True
             if event.key == pygame.K_s: mover_abajo = True    
+
                         
         if event.type == pygame.KEYUP: 
             if event.key == pygame.K_a: mover_izquierda = False  
