@@ -8,6 +8,7 @@ from delivery import Delivery
 from proyectiles import Botella
 from obstaculo import Pared
 from pathfinding import Grilla
+from items import Item
 
 pygame.init() 
 
@@ -185,6 +186,12 @@ enemigos_por_oleada = 3
 img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
 fondo_redimensionado = pygame.transform.scale(img_fondo, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
 
+#salami
+
+img_salami = pygame.image.load("assets/images/icons/salami.png").convert_alpha()
+img_salami = escalar_img(img_salami, 0.6)
+
+grupo_items = pygame.sprite.Group()
 
 run = True
 
@@ -290,6 +297,11 @@ while run == True:
         if colision:
             enemigo.vida -= 50
             if enemigo.vida <= 0:
+                
+                if random.random() < 0.4:
+                    nuevo_salami = Item(enemigo.rect.centerx, enemigo.rect.centery  , img_salami)
+                    grupo_items.add(nuevo_salami)
+                    
                 if enemigo in lista_enemigos:
                     lista_enemigos.remove(enemigo)
                         
@@ -315,6 +327,12 @@ while run == True:
     
     #dibujar botellazos
     grupo_botellas_enemigas.draw(ventana)
+    
+    
+    #los salamis
+    
+    grupo_items.update(jugador) #lo recogimos
+    grupo_items.draw(ventana) #se ve en el suelo
     
     entidades = lista_enemigos + [jugador]
     entidades.sort(key=lambda obj: obj.rect.bottom)
