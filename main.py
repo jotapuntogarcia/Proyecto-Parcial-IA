@@ -24,17 +24,21 @@ def escalar_img(image, scale):
     nueva_imagen = pygame.transform.scale(image, (int(w*scale), int(h*scale)))
     return nueva_imagen
 
-def generar_posicion_enemigo():
-    if random.randint(0, 1) == 0:
-        x = random.choice([-50, constantes.ANCHO_VENTANA + 50])
-        y = random.randint(0, constantes.ALTO_VENTANA)
+def generar_posicion_calle():
+    entrada = random.randint(0, 2)
+    
+    if entrada == 0:
+        x = -50
+        y = 500
+    elif entrada == 1:
+        x = constantes.ANCHO_VENTANA + 50
+        y = 500
     else:
-        x = random.randint(0, constantes.ANCHO_VENTANA)
-        y = random.choice([-50, constantes.ALTO_VENTANA +50])
+        x= 450
+        y= -50
         
     return x,y     
         
-
 
 #importa imagenes
 #personaje
@@ -134,7 +138,7 @@ reloj = pygame.time.Clock()
     
 lista_enemigos = []
 for i in range (3):
-    x, y = generar_posicion_enemigo()
+    x, y = generar_posicion_calle()
     nuevo_guachi = Enemigo (x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
     lista_enemigos.append(nuevo_guachi)
 
@@ -233,8 +237,7 @@ while run == True:
         print(f"OLEADA {numero_oleada} INICIADA")
         
         for _ in range(enemigos_por_oleada):
-            x = random.randint(100, constantes.ANCHO_VENTANA - 100)
-            y = random.randint(100, constantes.ALTO_VENTANA - 100)
+            x , y = generar_posicion_calle()
             nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
             lista_enemigos.append(nuevo_guachi)        
 
@@ -256,7 +259,7 @@ while run == True:
         if nueva_botella:
             grupo_botellas_enemigas.add(nueva_botella)
             
-        enemigo.dibujar(ventana)
+        #enemigo.dibujar(ventana)
 
         # Colisiones
         if jugador.forma.colliderect(enemigo.rect):
@@ -291,14 +294,30 @@ while run == True:
         hit.kill()
     
     #dibujar al jugador
-    jugador.dibujar(ventana)
+    #jugador.dibujar(ventana)
     
     #dibujar el arma
-    pistola.dibujar(ventana)
+    #pistola.dibujar(ventana)
     
     #dibujar balas
     for bala in grupo_balas:
         bala.dibujar(ventana)
+        
+    grupo_botellas_enemigas.draw(ventana)
+    
+    entidades = lista_enemigos + [jugador]
+    
+    entidades.sort(key=lambda obj: obj.rect.bottom)
+    
+    for entidad in entidades:
+        entidad.dibujar(ventana)
+        
+        
+    pistola.dibujar(ventana)
+    
+    dibujar_vida(ventana, 20, 20, jugador.vida)
+    
+    pygame.display.update()    
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
