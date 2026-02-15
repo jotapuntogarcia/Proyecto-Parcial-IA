@@ -1,6 +1,7 @@
 import pygame
 import math
-import constantes  
+import constantes
+import os  
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, image, x, y, angle):
@@ -39,19 +40,31 @@ class Weapon():
         
         self.ultimo_disparo = 0 
         self.cooldown = 500  
+        
+        self.sonido_disparo = None
+        ruta_sonido = "assets/audio/disparo.wav"
+        
+        if os.path.exists(ruta_sonido):
+            print(f"sonido disparo: {ruta_sonido}")
+            try:
+                self.sonido_disparo = pygame.mixer.Sound(ruta_sonido)
+                self.sonido_disparo.set_volume(0.2)
+            except Exception as e:
+                print(f"error: {e}")
+        else:
+            print(f"no hay pum: {ruta_sonido}")
 
     def update(self, personaje):
         bala_nueva = None 
         tiempo_actual = pygame.time.get_ticks()
         
-        # Ajuste de posicion del arma
-        offset_y = 15 #bajar para que pistola este cerca de la mano
-        distancia_mano = 20 #distancia arma del centro a mano
-        
-        if personaje.flip:
-            offset_x = -distancia_mano #Izquierda
-        else:
-            offset_x = distancia_mano  #Derecha
+        # Ajuste de posicion del arma por lado
+        if personaje.flip: # MIRANDO A LA IZQUIERDA
+            offset_x = -10 # Menos distancia para que se pegue al cuerpo
+            offset_y = 32  # Subimos un poco del pantalon a la mano
+        else:              # MIRANDO A LA DERECHA
+            offset_x = 22  # Ajuste para el brazo derecho
+            offset_y = 32  # Subimos un poco del pantalon a la mano
         
         self.rect.centerx = personaje.rect.centerx + offset_x
         self.rect.centery = personaje.rect.centery + offset_y
@@ -76,6 +89,13 @@ class Weapon():
         # logica disparo
         if pygame.mouse.get_pressed()[0]:
             if tiempo_actual - self.ultimo_disparo >= self.cooldown:
+                
+                if self.sonido_disparo:
+                    self.sonido_disparo.play()
+                    print("balazo")
+                else:
+                    print("balazo sin sonido")
+                    
                 angulo_bala = self.angulo
                 if personaje.flip:
                     angulo_bala = 180 - self.angulo 
@@ -85,6 +105,7 @@ class Weapon():
                 self.ultimo_disparo = tiempo_actual 
 
         return bala_nueva
+
 
     def dibujar(self, interfaz):
         interfaz.blit(self.image, self.rect)

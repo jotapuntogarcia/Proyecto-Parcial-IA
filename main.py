@@ -11,6 +11,10 @@ from pathfinding import Grilla
 
 pygame.init() 
 
+pygame.mixer.pre_init(44100, -16, 1, 515)
+pygame.mixer.init()
+sonido_disparo = pygame.mixer.Sound("assets/audio/disparo.wav")
+
 ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA, 
                                   constantes.ALTO_VENTANA), pygame.SCALED | pygame.FULLSCREEN)
 
