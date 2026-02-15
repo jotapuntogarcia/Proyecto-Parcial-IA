@@ -39,7 +39,7 @@ class Weapon():
         self.rect = self.image.get_rect()
         
         self.ultimo_disparo = 0 
-        self.cooldown = 500  
+        self.cooldown = 200
         
         self.sonido_disparo = None
         ruta_sonido = "assets/audio/disparo.wav"

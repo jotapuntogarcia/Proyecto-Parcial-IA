@@ -193,6 +193,15 @@ img_salami = escalar_img(img_salami, 0.6)
 
 grupo_items = pygame.sprite.Group()
 
+#contador de bajas
+
+fuente_score = pygame.font.SysFont("Comic Sans", 30, bold=True)  #COMIC SANS!
+puntuacion= 0
+
+def mostrar_puntuacion(ventana, x, y, puntuacion):
+    texto = fuente_score.render(f"Guachis Down: {puntuacion}", True, (255, 255, 255))
+    ventana.blit (texto, (x, y))
+
 run = True
 
 while run == True:
@@ -304,6 +313,11 @@ while run == True:
                     
                 if enemigo in lista_enemigos:
                     lista_enemigos.remove(enemigo)
+                    
+                if colision:
+                    enemigo.vida -= 50
+                    if enemigo.vida <= 0:
+                        puntuacion += 1    
                         
         if isinstance(enemigo, Delivery) and enemigo.completado:
             if enemigo in lista_enemigos:
@@ -345,6 +359,8 @@ while run == True:
     
     # dibujar interfaz
     dibujar_vida(ventana, 20, 20, jugador.vida)
+    mostrar_puntuacion(ventana, 20, 50, puntuacion)
+    
     # dibujar_grid(ventana) 
     # grupo_paredes.draw(ventana)
     
