@@ -175,7 +175,7 @@ img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
 fondo_redimensionado = pygame.transform.scale(img_fondo, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
 
 
-run=True
+run = True
 
 while run == True:
     
@@ -186,7 +186,7 @@ while run == True:
     cerebro_ia.marcar_obstaculos(grupo_paredes)
     
     #actualizar posicion del rect para colisiones
-    jugador.rect = jugador.forma
+    jugador.rect.midbottom = jugador.forma.midbottom
     
     #calcular movimeinto jugador
     delta_x = 0
@@ -210,15 +210,17 @@ while run == True:
     #colosionn jugador pared
     hit_pared = pygame.sprite.spritecollideany(jugador, grupo_paredes)
     if hit_pared:
-        jugador.rect.x -= delta_x
-        jugador.rect.y -= delta_y
+        jugador.forma.x -= delta_x
+        jugador.forma.y -= delta_y
+        # Re-sincronizar imagen si chocamos
+        jugador.rect.midbottom = jugador.forma.midbottom
     
     #actualizar estado de arma
     bala = pistola.update(jugador)
     if bala:
         grupo_balas.add(bala)
         
-    grupo_balas.update()
+    grupo_balas.update() #esto mueve las balas
         
     tiempo_actual = pygame.time.get_ticks()    
         
@@ -244,10 +246,7 @@ while run == True:
     #bluce de enemigos
     for enemigo in lista_enemigos[:]:
         # MOVER
-        if isinstance(enemigo, Delivery):
-            enemigo.move(jugador, cerebro_ia, grupo_paredes)
-        else: 
-            enemigo.move(jugador, cerebro_ia, grupo_paredes)    
+        enemigo.move(jugador, cerebro_ia, grupo_paredes)    
             
         # UPDATE
         nueva_botella = None
@@ -259,9 +258,7 @@ while run == True:
         if nueva_botella:
             grupo_botellas_enemigas.add(nueva_botella)
             
-        #enemigo.dibujar(ventana)
-
-        # Colisiones
+        #colisiones Jugador vs Enemigo
         if jugador.forma.colliderect(enemigo.rect):
             if isinstance(enemigo, Delivery):
                 jugador.vida -= 20
@@ -269,6 +266,7 @@ while run == True:
             else:
                 jugador.vida -= 0.5
 
+        #colisiones Enemigo vs Balas
         colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
         if colision:
             enemigo.vida -= 50
@@ -280,44 +278,40 @@ while run == True:
             if enemigo in lista_enemigos:
                 lista_enemigos.remove(enemigo)                
 
-    # Logica de vida jugador
+    #logica de vida jugador
     if jugador.vida <= 0:
         jugador.vida = 0
         jugador.vivo = False                
     
     grupo_botellas_enemigas.update()
-    grupo_botellas_enemigas.draw(ventana)
     
     hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
     if hit:
         jugador.vida -= 15
         hit.kill()
     
-    #dibujar al jugador
-    #jugador.dibujar(ventana)
     
-    #dibujar el arma
-    #pistola.dibujar(ventana)
+    # dibujar balas (Usamos .draw del grupo para evitar errores)
+    grupo_balas.draw(ventana)
     
-    #dibujar balas
-    for bala in grupo_balas:
-        bala.dibujar(ventana)
-        
+    #dibujar botellazos
     grupo_botellas_enemigas.draw(ventana)
     
     entidades = lista_enemigos + [jugador]
-    
     entidades.sort(key=lambda obj: obj.rect.bottom)
     
     for entidad in entidades:
         entidad.dibujar(ventana)
         
-        
+    # dibujar el arma (siempre encima del jugador)
     pistola.dibujar(ventana)
     
+    # dibujar interfaz
     dibujar_vida(ventana, 20, 20, jugador.vida)
+    # dibujar_grid(ventana) 
+    # grupo_paredes.draw(ventana)
     
-    pygame.display.update()    
+    pygame.display.update() 
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -340,10 +334,4 @@ while run == True:
             if event.key == pygame.K_w: mover_arriba = False
             if event.key == pygame.K_s: mover_abajo = False    
                                    
-    grupo_paredes.draw(ventana)
-    dibujar_vida(ventana, 20, 20, jugador.vida)
-    dibujar_grid(ventana)        
-            
-    pygame.display.update()
-
 pygame.quit()

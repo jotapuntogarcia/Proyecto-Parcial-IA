@@ -1,4 +1,4 @@
-import pygame
+import pygame   
 
 import constantes
 
@@ -30,10 +30,16 @@ class Personaje():
 
         
     def movimiento(self, delta_x, delta_y): 
-        self.forma.x += delta_x    
+        if delta_x > 0:
+            self.flip = False
+        elif delta_x < 0:
+            self.flip = True
+            
+        self.forma.x += delta_x
         self.forma.y += delta_y
         
-        self.rect.center = self.forma.center 
+        self.rect.midbottom = self.forma.midbottom
+        
         
         
     def update(self):
