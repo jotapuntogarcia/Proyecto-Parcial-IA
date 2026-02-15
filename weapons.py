@@ -92,9 +92,7 @@ class Weapon():
                 
                 if self.sonido_disparo:
                     self.sonido_disparo.play()
-                    print("balazo")
-                else:
-                    print("balazo sin sonido")
+                
                     
                 angulo_bala = self.angulo
                 if personaje.flip:

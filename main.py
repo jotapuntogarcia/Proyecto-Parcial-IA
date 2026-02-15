@@ -198,9 +198,18 @@ grupo_items = pygame.sprite.Group()
 fuente_score = pygame.font.SysFont("Comic Sans", 30, bold=True)  #COMIC SANS!
 puntuacion= 0
 
-def mostrar_puntuacion(ventana, x, y, puntuacion):
-    texto = fuente_score.render(f"Guachis Down: {puntuacion}", True, (255, 255, 255))
-    ventana.blit (texto, (x, y))
+def dibujar_interfaz(ventana, jugador, puntuacion, oleada):
+    
+    #vida
+    dibujar_vida(ventana, 20, 20, jugador.vida)
+    
+    #kills
+    texto_kills = fuente_score.render(f"Guachi Down: {puntuacion}", True, (255, 255, 0))
+    ventana.blit(texto_kills, (20, 50))
+    
+    #oleada
+    texto_oleada = fuente_score.render(f"Oleada: {oleada}", True, (0, 255, 255))    
+    ventana.blit(texto_oleada, (constantes.ANCHO_VENTANA - 180, 20))
 
 run = True
 
@@ -262,8 +271,6 @@ while run == True:
     if len(guachis_vivos) == 0: 
         numero_oleada += 1
         enemigos_por_oleada += 1 
-        
-        print(f"OLEADA {numero_oleada} INICIADA")
         
         for _ in range(enemigos_por_oleada):
             x , y = generar_posicion_calle()
@@ -358,8 +365,8 @@ while run == True:
     pistola.dibujar(ventana)
     
     # dibujar interfaz
-    dibujar_vida(ventana, 20, 20, jugador.vida)
-    mostrar_puntuacion(ventana, 20, 50, puntuacion)
+    #dibujar_vida(ventana, 20, 20, jugador.vida)
+    dibujar_interfaz(ventana, jugador, puntuacion, numero_oleada)
     
     # dibujar_grid(ventana) 
     # grupo_paredes.draw(ventana)
