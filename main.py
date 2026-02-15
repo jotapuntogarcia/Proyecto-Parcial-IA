@@ -27,17 +27,20 @@ def escalar_img(image, scale):
 def generar_posicion_calle():
     entrada = random.randint(0, 2)
     
-    if entrada == 0:
+    y_calle = random.randint(180, constantes.ALTO_VENTANA - 80)
+    
+    if entrada == 0: #calle izquierda
         x = -50
-        y = 500
-    elif entrada == 1:
+        y = y_calle
+    elif entrada == 1: #calle derecha
         x = constantes.ANCHO_VENTANA + 50
-        y = 500
-    else:
-        x= 450
-        y= -50
+        y = y_calle
+    else: #viene de arriba
+        ancho_hueco = constantes.ANCHO_VENTANA - 600
+        x = 300 + (ancho_hueco // 2) 
+        y = -50 # Aparece arriba para bajar por el callejón
         
-    return x,y     
+    return x, y    
         
 
 #importa imagenes
@@ -109,11 +112,15 @@ cerebro_ia = Grilla()
 col_x = 9 * constantes.TILE_SIZE
 fila_y = 7 * constantes.TILE_SIZE
 
-#5 de ancho 1 de alto
-muro1 = Pared(col_x, fila_y, 5 * constantes.TILE_SIZE, 1 * constantes.TILE_SIZE)  #este cruza de la calle al colmado
-#1 de ancho y 5 de alto
-muro2 = Pared(col_x, fila_y, 1 * constantes.TILE_SIZE, 5 * constantes.TILE_SIZE)  #del colmado baja
-grupo_paredes.add(muro1, muro2)
+muro_acera_izq = Pared(0, 130, 300, 40) 
+muro_acera_der = Pared(constantes.ANCHO_VENTANA - 300, 130, 300, 40)
+
+# Acera Inferior (El otro lado de la calle)
+muro_abajo = Pared(0, constantes.ALTO_VENTANA - 40, constantes.ANCHO_VENTANA, 40)
+
+# Agregamos todos al grupo
+grupo_paredes.add(muro_acera_izq, muro_acera_der, muro_abajo)
+cerebro_ia.marcar_obstaculos(grupo_paredes)
 
 
 #crear jugador de la clase personaje 
@@ -245,6 +252,14 @@ while run == True:
 
     #bluce de enemigos
     for enemigo in lista_enemigos[:]:
+        
+        if enemigo.rect.x < -100 or enemigo.rect.x > constantes.ANCHO_VENTANA + 100 or \
+           enemigo.rect.y < -100 or enemigo.rect.y > constantes.ALTO_VENTANA + 100:
+            if pygame.time.get_ticks() - tiempo_inicio_juego > 5000:
+                lista_enemigos.remove(enemigo)
+                continue
+            
+            
         # MOVER
         enemigo.move(jugador, cerebro_ia, grupo_paredes)    
             

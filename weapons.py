@@ -15,16 +15,18 @@ class Bullet(pygame.sprite.Sprite):
         self.delta_x = math.cos(math.radians(self.angulo)) * self.velocidad
         self.delta_y = -math.sin(math.radians(self.angulo)) * self.velocidad
 
-    # --- ESTE ES EL BLOQUE QUE TE FALTABA ---
     def update(self):
-        # Mover la bala sumando la velocidad a la posición
+        # Mover la bala
         self.rect.x += self.delta_x
         self.rect.y += self.delta_y
 
-        # Eliminar la bala si sale de la pantalla (para no acumular basura)
+        # Si sale de la pantalla, desaparece
         if self.rect.right < 0 or self.rect.left > constantes.ANCHO_VENTANA or \
            self.rect.bottom < 0 or self.rect.top > constantes.ALTO_VENTANA:
             self.kill()
+
+    def dibujar(self, interfaz):
+        interfaz.blit(self.image, self.rect)
 
 class Weapon():
     def __init__(self, image, imagen_bala):
@@ -42,15 +44,19 @@ class Weapon():
         bala_nueva = None 
         tiempo_actual = pygame.time.get_ticks()
         
-        offset_y = 30  
+        # Ajuste de posicion del arma
+        offset_y = 15 #bajar para que pistola este cerca de la mano
+        distancia_mano = 20 #distancia arma del centro a mano
         
-        distancia_a_la_mano = 25
-        offset_x = distancia_a_la_mano if not personaje.flip else -distancia_a_la_mano
+        if personaje.flip:
+            offset_x = -distancia_mano #Izquierda
+        else:
+            offset_x = distancia_mano  #Derecha
         
         self.rect.centerx = personaje.rect.centerx + offset_x
         self.rect.centery = personaje.rect.centery + offset_y
         
-        #Rotación mouse
+        # Rotación mouse
         mouse_x, mouse_y = pygame.mouse.get_pos()
         distancia_x = mouse_x - self.rect.centerx
         distancia_y = -(mouse_y - self.rect.centery)
@@ -67,14 +73,14 @@ class Weapon():
 
         self.rect = self.image.get_rect(center=self.rect.center)
         
-        #logica disparo
+        # logica disparo
         if pygame.mouse.get_pressed()[0]:
             if tiempo_actual - self.ultimo_disparo >= self.cooldown:
                 angulo_bala = self.angulo
                 if personaje.flip:
                     angulo_bala = 180 - self.angulo 
                 
-                #bala sale del centro
+                # bala sale del centro del arma
                 bala_nueva = Bullet(self.imagen_bala, self.rect.centerx, self.rect.centery, angulo_bala)
                 self.ultimo_disparo = tiempo_actual 
 

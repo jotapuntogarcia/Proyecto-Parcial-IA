@@ -36,6 +36,16 @@ class Enemigo():
         
         tiempo_actual = pygame.time.get_ticks()
         
+        if self.rect.centerx < 0:
+            self.rect.x += self.velocidad
+            return
+        if self.rect.centerx > constantes.ANCHO_VENTANA:
+            self.rect.x -= self.velocidad
+            return
+        if self.rect.centery < 0:
+            self.rect.y += self.velocidad
+            return
+        
         # Calcular distancia
         dx_final = jugador.forma.centerx - self.rect.centerx
         dy_final = jugador.forma.centery - self.rect.centery
@@ -72,8 +82,18 @@ class Enemigo():
             
             if distancia_nodo > 2:
                 self.estado = "caminar"
+                
+                # Mover en X y verificar colisión
                 self.rect.x += (dx / distancia_nodo) * self.velocidad
+                for pared in grupo_paredes:
+                    if self.rect.colliderect(pared.rect):
+                        self.rect.x -= (dx / distancia_nodo) * self.velocidad
+                
+                # Mover en Y y verificar colisión
                 self.rect.y += (dy / distancia_nodo) * self.velocidad
+                for pared in grupo_paredes:
+                    if self.rect.colliderect(pared.rect):
+                        self.rect.y -= (dy / distancia_nodo) * self.velocidad
             else:
                 self.ruta.pop(0)
             
