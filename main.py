@@ -1,6 +1,7 @@
 import pygame
 import constantes
 import random
+import os
 from personaje import Personaje
 from weapons import Weapon
 from enemigo import Enemigo
@@ -15,6 +16,26 @@ pygame.init()
 pygame.mixer.pre_init(44100, -16, 1, 515)
 pygame.mixer.init()
 sonido_disparo = pygame.mixer.Sound("assets/audio/disparo.wav")
+sonido_disparo.set_volume(1.0)
+
+pygame.mixer_music.set_volume(0.4)
+
+volumen_musica_fondo = 0.15
+pygame.mixer.music.set_volume(volumen_musica_fondo)
+
+track_menu = "assets/audio/menu.mp3"
+track_gameplay = "assets/audio/gameplay.mp3"
+
+def reproducir_musica(pista):
+    if not os.path.exists(pista):
+        return
+    try:
+        print(f"No se encontró el archivo: {pista}")
+        pygame.mixer.music.load(pista)
+        pygame.mixer.music.play(-1) #loop infinito
+        pygame.mixer.music.set_volume(volumen_musica_fondo)
+    except Exception as e:
+        print(f"Error al reproducir {pista}: {e}")
 
 ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA, 
                                   constantes.ALTO_VENTANA), pygame.SCALED | pygame.FULLSCREEN)
@@ -293,6 +314,8 @@ def dibujar_interfaz(ventana, jugador, puntuacion, oleada):
     #oleada
     texto_oleada = fuente_score.render(f"Oleada: {oleada}", True, (0, 255, 255))    
     ventana.blit(texto_oleada, (constantes.ANCHO_VENTANA - 180, 20))
+    
+reproducir_musica(track_menu)
 
 run = True
 while run:
@@ -307,6 +330,7 @@ while run:
             if event.key == pygame.K_ESCAPE:
                 if estado_juego == "JUGANDO":
                     estado_juego = "MENU"
+                    reproducir_musica(track_menu)
                 else:
                     run = False
             
@@ -314,11 +338,13 @@ while run:
                 if event.key == pygame.K_SPACE:
                     estado_juego = "JUGANDO"
                     reiniciar_juego()
+                    reproducir_musica(track_gameplay)
             
             elif estado_juego == "GAME_OVER":
                 if event.key == pygame.K_r:
                     reiniciar_juego()
                     estado_juego = "JUGANDO"
+                    reproducir_musica(track_gameplay)
 
             #controles de movimiento
             if estado_juego == "JUGANDO":
@@ -326,7 +352,7 @@ while run:
                 if event.key == pygame.K_a: mover_izquierda = True    
                 if event.key == pygame.K_d: mover_derecha = True  
                 if event.key == pygame.K_w: mover_arriba = True
-                if event.key == pygame.K_s: mover_abajo = True    
+                if event.key == pygame.K_s: mover_abajo = True
 
         if event.type == pygame.KEYUP: 
             if estado_juego == "JUGANDO":
@@ -454,6 +480,7 @@ while run:
             jugador.vida = 0
             jugador.vivo = False
             estado_juego = "GAME_OVER"
+            pygame.mixer.music.fadeout(500)
         
         grupo_botellas_enemigas.update()
         
@@ -479,6 +506,6 @@ while run:
         
         dibujar_interfaz(ventana, jugador, puntuacion, numero_oleada)
     
-    pygame.display.update() 
+    pygame.display.update()
                                    
 pygame.quit()
