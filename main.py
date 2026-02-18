@@ -20,6 +20,16 @@ ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA,
                                   constantes.ALTO_VENTANA), pygame.SCALED | pygame.FULLSCREEN)
 
 
+#menu
+
+img_fondo_menu = pygame.image.load("assets/images/background/fondo_menu.png").convert()
+img_fondo_menu = pygame.transform.scale(img_fondo_menu, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
+
+font_titulo = pygame.font.SysFont("Impact", 80)
+font_boton = pygame.font.SysFont("Arial", 40, bold=True)
+
+estado_juego = "MENU" 
+
 pygame.display.set_caption("El Muchacho Dembow")
 
 
@@ -46,7 +56,80 @@ def generar_posicion_calle():
         y = -50 # Aparece arriba para bajar por el callejón
         
     return x, y    
-        
+
+def reiniciar_juego():
+    #variables globales
+    global puntuacion, numero_oleada, lista_enemigos, grupo_balas, grupo_items, jugador
+    global mover_arriba, mover_abajo, mover_izquierda, mover_derecha
+    
+    #reiniciar jugador
+    jugador.vida = 100
+    jugador.vivo = True
+    jugador.forma.center = (constantes.ANCHO_VENTANA // 2, constantes.ALTO_VENTANA // 2)
+    
+    #FORZAR DETENCIÓN PARA QUE EL CUANDO PERDAMOS NO SE QUEDE EL JUGADOR LOCO
+    mover_arriba = False
+    mover_abajo = False
+    mover_izquierda = False
+    mover_derecha = False
+    
+    #Reiniciar stats
+    puntuacion = 0
+    numero_oleada = 1
+    
+    #limpiar grupos
+    lista_enemigos.clear()
+    grupo_balas.empty()
+    grupo_botellas_enemigas.empty()
+    grupo_items.empty()
+    
+    #crear enemigos iniciales
+    for i in range (3):
+        x, y = generar_posicion_calle()
+        nuevo_guachi = Enemigo (x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+        lista_enemigos.append(nuevo_guachi)
+
+def dibujar_menu(ventana):
+    ventana.blit(img_fondo_menu, (0, 0))
+    
+    #oscurecer el fondo para hacer texto visible
+    overlay = pygame.Surface((constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
+    overlay.set_alpha(100) #transparente    
+    overlay.fill((0, 0, 0))
+    ventana.blit(overlay, (0, 0))
+    
+    #titulo
+    titulo_sombra = font_titulo.render("El Muchacho Dembow", True, (0, 0, 0))
+    titulo = font_titulo.render("El Muchacho Dembow", True, (255, 215, 0)) #color dorado
+    
+    rect_titulo = titulo.get_rect(center=(constantes.ANCHO_VENTANA//2, 150))
+    ventana.blit(titulo_sombra, (rect_titulo.x + 5, rect_titulo.y + 5))
+    ventana.blit(titulo, rect_titulo)
+    
+    #mensaje inicio
+    
+    msg = font_boton.render("Presiona [ESPACIO] para salir a la calle", True, (255, 255, 255))
+    rect_msg = msg.get_rect(center=(constantes.ANCHO_VENTANA//2,450))
+    
+    #efecto parpardeo prueba
+    if pygame.time.get_ticks() % 1000 > 500:
+        ventana.blit(msg, rect_msg)
+
+def dibujar_game_over(ventana, puntuacion):
+    ventana.fill((20, 0, 0)) # Fondo rojo oscuro
+    
+    txt_muerte = font_titulo.render("¡TE LIQUIDARON!", True, (255, 0, 0))
+    rect_muerte = txt_muerte.get_rect(center=(constantes.ANCHO_VENTANA//2, 200))
+    ventana.blit(txt_muerte, rect_muerte)
+    
+    txt_score = font_boton.render(f"Guachis Down: {puntuacion}", True, (255, 255, 255))
+    rect_score = txt_score.get_rect(center=(constantes.ANCHO_VENTANA//2, 300))
+    ventana.blit(txt_score, rect_score)
+    
+    txt_restart = font_boton.render("Presiona [R] para volver a intentar", True, (255, 255, 0))
+    rect_restart = txt_restart.get_rect(center=(constantes.ANCHO_VENTANA//2, 450))
+    ventana.blit(txt_restart, rect_restart)
+
 
 #importa imagenes
 #personaje
@@ -212,186 +295,190 @@ def dibujar_interfaz(ventana, jugador, puntuacion, oleada):
     ventana.blit(texto_oleada, (constantes.ANCHO_VENTANA - 180, 20))
 
 run = True
-
-while run == True:
-    
+while run:
     #MOVER A 60FPS
     reloj.tick(constantes.FPS)
-    ventana.blit(fondo_redimensionado, (0, 0))
-    
-    cerebro_ia.marcar_obstaculos(grupo_paredes)
-    
-    #actualizar posicion del rect para colisiones
-    jugador.rect.midbottom = jugador.forma.midbottom
-    
-    #calcular movimeinto jugador
-    delta_x = 0
-    delta_y = 0
-    
-    if mover_derecha == True:
-        delta_x = constantes.VELOCIDAD        
-    if mover_izquierda == True:
-        delta_x = -constantes.VELOCIDAD
-    if mover_arriba == True:
-        delta_y = -constantes.VELOCIDAD
-    if mover_abajo == True:
-        delta_y = constantes.VELOCIDAD            
-    
-    #mover jugador
-    jugador.movimiento(delta_x, delta_y)
-    
-    #actualizar estado jugador
-    jugador.update()
-    
-    #colosionn jugador pared
-    hit_pared = pygame.sprite.spritecollideany(jugador, grupo_paredes)
-    if hit_pared:
-        jugador.forma.x -= delta_x
-        jugador.forma.y -= delta_y
-        # Re-sincronizar imagen si chocamos
-        jugador.rect.midbottom = jugador.forma.midbottom
-    
-    #actualizar estado de arma
-    bala = pistola.update(jugador)
-    if bala:
-        grupo_balas.add(bala)
-        
-    grupo_balas.update() #esto mueve las balas
-        
-    tiempo_actual = pygame.time.get_ticks()    
-        
-    if tiempo_actual - ultimo_delivery > 5000: #5 segundos cada uno
-        nuevo_delivery = Delivery(animaciones_delivery)
-        lista_enemigos.append(nuevo_delivery)
-        ultimo_delivery = tiempo_actual
-        
-    #oledas
-    guachis_vivos = [e for e in lista_enemigos if isinstance(e, Enemigo)]
-    
-    if len(guachis_vivos) == 0: 
-        numero_oleada += 1
-        enemigos_por_oleada += 1 
-        
-        for _ in range(enemigos_por_oleada):
-            x , y = generar_posicion_calle()
-            nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
-            lista_enemigos.append(nuevo_guachi)        
 
-    #bluce de enemigos
-    for enemigo in lista_enemigos[:]:
-        
-        if enemigo.rect.x < -100 or enemigo.rect.x > constantes.ANCHO_VENTANA + 100 or \
-           enemigo.rect.y < -100 or enemigo.rect.y > constantes.ALTO_VENTANA + 100:
-            if pygame.time.get_ticks() - tiempo_inicio_juego > 5000:
-                lista_enemigos.remove(enemigo)
-                continue
-            
-            
-        # MOVER
-        enemigo.move(jugador, cerebro_ia, grupo_paredes)    
-            
-        # UPDATE
-        nueva_botella = None
-        if isinstance(enemigo, Delivery):
-             enemigo.update() 
-        else:
-             nueva_botella = enemigo.update(jugador)
-        
-        if nueva_botella:
-            grupo_botellas_enemigas.add(nueva_botella)
-            
-        #colisiones Jugador vs Enemigo
-        if jugador.forma.colliderect(enemigo.rect):
-            if isinstance(enemigo, Delivery):
-                jugador.vida -= 20
-                if enemigo in lista_enemigos: lista_enemigos.remove(enemigo)
-            else:
-                jugador.vida -= 0.5
-
-        #colisiones Enemigo vs Balas
-        colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True)
-        if colision:
-            enemigo.vida -= 50
-            if enemigo.vida <= 0:
-                
-                if random.random() < 0.4:
-                    nuevo_salami = Item(enemigo.rect.centerx, enemigo.rect.centery  , img_salami)
-                    grupo_items.add(nuevo_salami)
-                    
-                if enemigo in lista_enemigos:
-                    lista_enemigos.remove(enemigo)
-                    
-                if colision:
-                    enemigo.vida -= 50
-                    if enemigo.vida <= 0:
-                        puntuacion += 1    
-                        
-        if isinstance(enemigo, Delivery) and enemigo.completado:
-            if enemigo in lista_enemigos:
-                lista_enemigos.remove(enemigo)                
-
-    #logica de vida jugador
-    if jugador.vida <= 0:
-        jugador.vida = 0
-        jugador.vivo = False                
-    
-    grupo_botellas_enemigas.update()
-    
-    hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
-    if hit:
-        jugador.vida -= 15
-        hit.kill()
-    
-    
-    # dibujar balas (Usamos .draw del grupo para evitar errores)
-    grupo_balas.draw(ventana)
-    
-    #dibujar botellazos
-    grupo_botellas_enemigas.draw(ventana)
-    
-    
-    #los salamis
-    
-    grupo_items.update(jugador) #lo recogimos
-    grupo_items.draw(ventana) #se ve en el suelo
-    
-    entidades = lista_enemigos + [jugador]
-    entidades.sort(key=lambda obj: obj.rect.bottom)
-    
-    for entidad in entidades:
-        entidad.dibujar(ventana)
-        
-    # dibujar el arma (siempre encima del jugador)
-    pistola.dibujar(ventana)
-    
-    # dibujar interfaz
-    #dibujar_vida(ventana, 20, 20, jugador.vida)
-    dibujar_interfaz(ventana, jugador, puntuacion, numero_oleada)
-    
-    # dibujar_grid(ventana) 
-    # grupo_paredes.draw(ventana)
-    
-    pygame.display.update() 
-    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            run=False  
+            run = False
         
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                run = False
-            if event.key == pygame.K_f:
-                pygame.display.toggle_fullscreen()    
-            if event.key == pygame.K_a: mover_izquierda = True    
-            if event.key == pygame.K_d: mover_derecha = True  
-            if event.key == pygame.K_w: mover_arriba = True
-            if event.key == pygame.K_s: mover_abajo = True    
+                if estado_juego == "JUGANDO":
+                    estado_juego = "MENU"
+                else:
+                    run = False
+            
+            if estado_juego == "MENU":
+                if event.key == pygame.K_SPACE:
+                    estado_juego = "JUGANDO"
+                    reiniciar_juego()
+            
+            elif estado_juego == "GAME_OVER":
+                if event.key == pygame.K_r:
+                    reiniciar_juego()
+                    estado_juego = "JUGANDO"
 
-                        
+            #controles de movimiento
+            if estado_juego == "JUGANDO":
+                if event.key == pygame.K_f: pygame.display.toggle_fullscreen()    
+                if event.key == pygame.K_a: mover_izquierda = True    
+                if event.key == pygame.K_d: mover_derecha = True  
+                if event.key == pygame.K_w: mover_arriba = True
+                if event.key == pygame.K_s: mover_abajo = True    
+
         if event.type == pygame.KEYUP: 
-            if event.key == pygame.K_a: mover_izquierda = False  
-            if event.key == pygame.K_d: mover_derecha = False 
-            if event.key == pygame.K_w: mover_arriba = False
-            if event.key == pygame.K_s: mover_abajo = False    
+            if estado_juego == "JUGANDO":
+                if event.key == pygame.K_a: mover_izquierda = False  
+                if event.key == pygame.K_d: mover_derecha = False 
+                if event.key == pygame.K_w: mover_arriba = False
+                if event.key == pygame.K_s: mover_abajo = False 
+
+    #estados
+
+    if estado_juego == "MENU":
+        dibujar_menu(ventana)
+
+    elif estado_juego == "GAME_OVER":
+        dibujar_game_over(ventana, puntuacion)
+
+    elif estado_juego == "JUGANDO":
+        
+        #dibujar fondo y paredes
+        ventana.blit(fondo_redimensionado, (0, 0))
+        cerebro_ia.marcar_obstaculos(grupo_paredes)
+        
+        jugador.rect.midbottom = jugador.forma.midbottom
+        
+        #calcular movimeinto jugador
+        delta_x = 0
+        delta_y = 0
+        
+        if mover_derecha == True: delta_x = constantes.VELOCIDAD        
+        if mover_izquierda == True: delta_x = -constantes.VELOCIDAD
+        if mover_arriba == True: delta_y = -constantes.VELOCIDAD
+        if mover_abajo == True: delta_y = constantes.VELOCIDAD            
+        
+        #mover jugador
+        jugador.movimiento(delta_x, delta_y)
+        jugador.update()
+        
+        #colosionn jugador pared
+        hit_pared = pygame.sprite.spritecollideany(jugador, grupo_paredes)
+        if hit_pared:
+            jugador.forma.x -= delta_x
+            jugador.forma.y -= delta_y
+            jugador.rect.midbottom = jugador.forma.midbottom
+        
+        #actualizar estado de arma
+        bala = pistola.update(jugador)
+        if bala:
+            grupo_balas.add(bala)
+            
+        grupo_balas.update() #esto mueve las balas
+            
+        #generar enemigos
+        tiempo_actual = pygame.time.get_ticks()    
+            
+        if tiempo_actual - ultimo_delivery > 5000: #5 segundos cada uno
+            nuevo_delivery = Delivery(animaciones_delivery)
+            lista_enemigos.append(nuevo_delivery)
+            ultimo_delivery = tiempo_actual
+            
+        #oledas
+        guachis_vivos = [e for e in lista_enemigos if isinstance(e, Enemigo)]
+        
+        if len(guachis_vivos) == 0: 
+            numero_oleada += 1
+            enemigos_por_oleada += 1 
+            
+            for _ in range(enemigos_por_oleada):
+                x , y = generar_posicion_calle()
+                nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+                lista_enemigos.append(nuevo_guachi)        
+
+        #bucle enemigos
+        for enemigo in lista_enemigos[:]:
+            
+            #si los enemigos se quedan fuera de la pantalla se borran
+            if enemigo.rect.x < -100 or enemigo.rect.x > constantes.ANCHO_VENTANA + 100 or \
+               enemigo.rect.y < -100 or enemigo.rect.y > constantes.ALTO_VENTANA + 100:
+                if pygame.time.get_ticks() - tiempo_inicio_juego > 5000:
+                    lista_enemigos.remove(enemigo)
+                    continue
+                
+            enemigo.move(jugador, cerebro_ia, grupo_paredes)    
+                
+            #ataque
+            nueva_botella = None
+            if isinstance(enemigo, Delivery):
+                 enemigo.update() 
+            else:
+                 nueva_botella = enemigo.update(jugador)
+            
+            if nueva_botella:
+                grupo_botellas_enemigas.add(nueva_botella)
+                
+            #jugador vs enemigo
+            if jugador.forma.colliderect(enemigo.rect):
+                if isinstance(enemigo, Delivery):
+                    jugador.vida -= 20
+                    if enemigo in lista_enemigos: lista_enemigos.remove(enemigo)
+                else:
+                    jugador.vida -= 0.5
+
+            #bala vs enemigo
+            colision = pygame.sprite.spritecollide(enemigo, grupo_balas, True) #True borra la bala
+            if colision:
+                enemigo.vida -= 50
+                if enemigo.vida <= 0:
+                    #enemigo muerto
+                    puntuacion += 1
+                    
+                    #probabilidad del salami
+                    if random.random() < 0.4:
+                        nuevo_item = Item(enemigo.rect.centerx, enemigo.rect.centery, img_salami)
+                        grupo_items.add(nuevo_item)
+                        
+                    if enemigo in lista_enemigos:
+                        lista_enemigos.remove(enemigo)
+                            
+            #limpiar delivery 
+            if isinstance(enemigo, Delivery) and enemigo.completado:
+                if enemigo in lista_enemigos:
+                    lista_enemigos.remove(enemigo)                
+
+        #vida y muerte muchacho
+        if jugador.vida <= 0:
+            jugador.vida = 0
+            jugador.vivo = False
+            estado_juego = "GAME_OVER"
+        
+        grupo_botellas_enemigas.update()
+        
+        hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
+        if hit:
+            jugador.vida -= 15
+            hit.kill()
+                
+        grupo_balas.draw(ventana)
+        
+        grupo_botellas_enemigas.draw(ventana)
+        
+        grupo_items.update(jugador) 
+        grupo_items.draw(ventana) 
+        
+        entidades = lista_enemigos + [jugador]
+        entidades.sort(key=lambda obj: obj.rect.bottom)
+        
+        for entidad in entidades:
+            entidad.dibujar(ventana)
+            
+        pistola.dibujar(ventana)
+        
+        dibujar_interfaz(ventana, jugador, puntuacion, numero_oleada)
+    
+    pygame.display.update() 
                                    
 pygame.quit()

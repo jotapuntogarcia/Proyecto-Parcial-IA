@@ -25,7 +25,7 @@ class Enemigo():
         
         # COOLDOWN 
         self.ultimo_ataque = 0
-        self.cooldown_ataque = 1000  #2 segundos entre botellazos
+        self.cooldown_ataque = 2000  #segundos entre botellazos
         self.ya_lanzada = False
         
         self.ruta = []
