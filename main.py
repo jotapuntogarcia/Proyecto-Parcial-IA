@@ -39,14 +39,12 @@ def reproducir_musica(pista):
 
 ventana= pygame.display.set_mode((constantes.ANCHO_VENTANA, 
                                   constantes.ALTO_VENTANA), pygame.SCALED | pygame.FULLSCREEN)
-
-
 #menu
 
 img_fondo_menu = pygame.image.load("assets/images/background/fondo_menu.png").convert()
 img_fondo_menu = pygame.transform.scale(img_fondo_menu, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
 
-font_titulo = pygame.font.SysFont("Impact", 80)
+font_titulo = pygame.font.SysFont("Comic Sans", 80)
 font_boton = pygame.font.SysFont("Arial", 40, bold=True)
 
 estado_juego = "MENU" 
@@ -61,8 +59,7 @@ def escalar_img(image, scale):
     return nueva_imagen
 
 def generar_posicion_calle():
-    entrada = random.randint(0, 2)
-    
+    entrada = random.randint(0, 2)    
     y_calle = random.randint(180, constantes.ALTO_VENTANA - 80)
     
     if entrada == 0: #calle izquierda
@@ -98,7 +95,6 @@ def reiniciar_juego():
     puntuacion = 0
     numero_oleada = 1
     
-    #limpiar grupos
     lista_enemigos.clear()
     grupo_balas.empty()
     grupo_botellas_enemigas.empty()
@@ -139,7 +135,7 @@ def dibujar_menu(ventana):
 def dibujar_game_over(ventana, puntuacion):
     ventana.fill((20, 0, 0)) # Fondo rojo oscuro
     
-    txt_muerte = font_titulo.render("¡TE LIQUIDARON!", True, (255, 0, 0))
+    txt_muerte = font_titulo.render("Te dieron pa'bajo", True, (255, 0, 0))
     rect_muerte = txt_muerte.get_rect(center=(constantes.ANCHO_VENTANA//2, 200))
     ventana.blit(txt_muerte, rect_muerte)
     
@@ -317,6 +313,16 @@ def dibujar_interfaz(ventana, jugador, puntuacion, oleada):
     
 reproducir_musica(track_menu)
 
+pygame.joystick.init()
+mando = None
+
+if pygame.joystick.get_count() > 0:
+    mando = pygame.joystick.Joystick(0)
+    mando.init()
+    print(f"Mando conectado: {mando.get_name()}")
+else:
+    print("No hay mando, use el teclado")    
+
 run = True
 while run:
     #MOVER A 60FPS
@@ -347,6 +353,7 @@ while run:
                     reproducir_musica(track_gameplay)
 
             #controles de movimiento
+        if event.type == pygame.KEYDOWN:    
             if estado_juego == "JUGANDO":
                 if event.key == pygame.K_f: pygame.display.toggle_fullscreen()    
                 if event.key == pygame.K_a: mover_izquierda = True    
@@ -360,6 +367,32 @@ while run:
                 if event.key == pygame.K_d: mover_derecha = False 
                 if event.key == pygame.K_w: mover_arriba = False
                 if event.key == pygame.K_s: mover_abajo = False 
+
+    #mando conrol dualshock
+    if mando:
+        eje_x = mando.get_axis(0)
+        eje_y = mando.get_axis(1)
+        
+        zona_muerta = 0.1
+        
+        if eje_x < -zona_muerta: mover_izquierda = True
+        elif eje_x > zona_muerta: mover_derecha = True
+        else:
+            if not (pygame.key.get_pressed()[pygame.K_a] or pygame.key.get_pressed()[pygame.K_d]):
+                mover_izquierda = False
+                mover_derecha = False
+                
+        if eje_y < -zona_muerta: mover_arriba = True
+        elif eje_y > zona_muerta: mover_abajo = True
+        else:
+            if not (pygame.key.get_pressed()[pygame.K_w] or pygame.key.get_pressed()[pygame.K_s]):
+                mover_arriba = False
+                mover_abajo = False
+                
+        if mando.get_button(9) or mando.get_button(8):
+            if estado_juego == "JUGANDO":
+                estado_juego = "MENU"
+                reproducir_musica(track_menu)                       
 
     #estados
 
@@ -483,6 +516,12 @@ while run:
             pygame.mixer.music.fadeout(500)
         
         grupo_botellas_enemigas.update()
+        
+        gatillo = False
+        if mando and mando.get_button(0):
+            gatillo = True
+            
+        bala = pistola.update(jugador, gatillo)    
         
         hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
         if hit:
