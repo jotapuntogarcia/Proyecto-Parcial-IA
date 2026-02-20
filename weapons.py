@@ -54,27 +54,37 @@ class Weapon():
         else:
             print(f"no hay pum: {ruta_sonido}")
 
-    def update(self, personaje, disparo_mando=False):
+    def update(self, personaje, disparo_mando=False, aim_y=0):
         bala_nueva = None 
         tiempo_actual = pygame.time.get_ticks()
         
-        if personaje.flip: # MIRANDO A LA IZQUIERDA
+        # Ajuste de posición del arma
+        if personaje.flip: 
             offset_x = -10
             offset_y = 32
-        else:              # MIRANDO A LA DERECHA
+        else:              
             offset_x = 22
             offset_y = 32
+            
+        self.rect.centerx = personaje.rect.centerx + offset_x
+        self.rect.centery = personaje.rect.centery + offset_y
         
-        self.rect.centerx = personaje.rect.centerx + (22 if not personaje.flip else -10)
-        self.rect.centery = personaje.rect.centery + 32
+        zona_muerta = 0.2
         
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        distancia_x = mouse_x - self.rect.centerx
-        distancia_y = -(mouse_y - self.rect.centery)
+        #Si el joystick esta conectado, el raton no funciona
+        if pygame.joystick.get_count() > 0:
+            if abs(aim_y) > zona_muerta:
+                self.angulo = aim_y * -50
+            else:
+                self.angulo = 0 
+        else:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            distancia_x = mouse_x - self.rect.centerx
+            distancia_y = -(mouse_y - self.rect.centery)
+            self.angulo = math.degrees(math.atan2(distancia_y, abs(distancia_x)))
 
-        angulo_base = math.degrees(math.atan2(distancia_y, abs(distancia_x)))
-        limite = 40 
-        self.angulo = max(-limite, min(limite, angulo_base))
+        limite = 50 
+        self.angulo = max(-limite, min(limite, self.angulo))
         
         if personaje.flip:
             imagen_flip = pygame.transform.flip(self.image_original, True, False)
@@ -97,7 +107,7 @@ class Weapon():
                 bala_nueva = Bullet(self.imagen_bala, self.rect.centerx, self.rect.centery, angulo_bala)
                 self.ultimo_disparo = tiempo_actual 
 
-        return bala_nueva 
+        return bala_nueva
 
     def dibujar(self, interfaz):
         interfaz.blit(self.image, self.rect)

@@ -125,7 +125,7 @@ def dibujar_menu(ventana):
     
     #mensaje inicio
     
-    msg = font_boton.render("Presiona [ESPACIO] para salir a la calle", True, (255, 255, 255))
+    msg = font_boton.render("[ESPACIO] o [X] para salir a la calle", True, (255, 255, 255))
     rect_msg = msg.get_rect(center=(constantes.ANCHO_VENTANA//2,450))
     
     #efecto parpardeo prueba
@@ -139,11 +139,11 @@ def dibujar_game_over(ventana, puntuacion):
     rect_muerte = txt_muerte.get_rect(center=(constantes.ANCHO_VENTANA//2, 200))
     ventana.blit(txt_muerte, rect_muerte)
     
-    txt_score = font_boton.render(f"Guachis Down: {puntuacion}", True, (255, 255, 255))
+    txt_score = font_boton.render(f"Te llevaste a: {puntuacion}", True, (255, 255, 255))
     rect_score = txt_score.get_rect(center=(constantes.ANCHO_VENTANA//2, 300))
     ventana.blit(txt_score, rect_score)
     
-    txt_restart = font_boton.render("Presiona [R] para volver a intentar", True, (255, 255, 0))
+    txt_restart = font_boton.render("Presiona [R] o [X] para volver a intentar", True, (255, 255, 0))
     rect_restart = txt_restart.get_rect(center=(constantes.ANCHO_VENTANA//2, 450))
     ventana.blit(txt_restart, rect_restart)
 
@@ -368,7 +368,21 @@ while run:
                 if event.key == pygame.K_w: mover_arriba = False
                 if event.key == pygame.K_s: mover_abajo = False 
 
+        if event.type == pygame.JOYBUTTONDOWN:
+            if estado_juego == "MENU" or estado_juego == "GAME_OVER":
+                if event.button == 0: #0 es la X
+                    estado_juego = "JUGANDO"
+                    reiniciar_juego()
+                    reproducir_musica(track_gameplay)
+            elif estado_juego == "JUGANDO":
+                if event.button in [9, 10]:
+                    estado_juego = "MENU"
+                    reproducir_musica(track_menu)
+
     #mando conrol dualshock
+    disparo_mando = False
+    aim_y = 0
+    
     if mando:
         eje_x = mando.get_axis(0)
         eje_y = mando.get_axis(1)
@@ -388,11 +402,16 @@ while run:
             if not (pygame.key.get_pressed()[pygame.K_w] or pygame.key.get_pressed()[pygame.K_s]):
                 mover_arriba = False
                 mover_abajo = False
-                
-        if mando.get_button(9) or mando.get_button(8):
-            if estado_juego == "JUGANDO":
-                estado_juego = "MENU"
-                reproducir_musica(track_menu)                       
+
+        aim_y = mando.get_axis(4)
+        
+        #R2 es 5
+        if mando.get_axis(5) > 0.1:
+            disparo_mando = True
+        #R1
+        if mando.get_button(5):
+            disparo_mando = True
+                     
 
     #estados
 
@@ -431,7 +450,7 @@ while run:
             jugador.rect.midbottom = jugador.forma.midbottom
         
         #actualizar estado de arma
-        bala = pistola.update(jugador)
+        bala = pistola.update(jugador, disparo_mando, aim_y)
         if bala:
             grupo_balas.add(bala)
             
@@ -516,12 +535,6 @@ while run:
             pygame.mixer.music.fadeout(500)
         
         grupo_botellas_enemigas.update()
-        
-        gatillo = False
-        if mando and mando.get_button(0):
-            gatillo = True
-            
-        bala = pistola.update(jugador, gatillo)    
         
         hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
         if hit:
