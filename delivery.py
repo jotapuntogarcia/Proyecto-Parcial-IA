@@ -1,6 +1,7 @@
 import pygame
 import constantes
 import random
+import math
 
 class Delivery():
     def __init__(self, animaciones):
@@ -12,10 +13,10 @@ class Delivery():
         self.rect = self.image.get_rect()
         self.completado = False
         
-        
+
         direccion = random.choice(["izquierda", "derecha"])
         
-        if direccion == "izquerda":
+        if direccion == "izquierda":
             self.rect.x = -50
             self.objetivo_x = constantes.ANCHO_VENTANA + 100
             self.velocidad = random.randint(6, 9)
@@ -24,32 +25,30 @@ class Delivery():
             self.rect.x = constantes.ANCHO_VENTANA + 50
             self.objetivo_x = -100
             self.velocidad = random.randint(6, 9)
-            self.flip = True
+            self.flip = True 
             
         self.rect.y = random.randint(50, constantes.ALTO_VENTANA - 100)
-        
         self.vida = 50
         
-          
     def move(self, jugador, cerebro_ia, grupo_paredes):
         destino = (self.objetivo_x, self.rect.centery)
         
         ruta = cerebro_ia.a_estrella(self.rect.center, destino)
-        
         vel = abs(self.velocidad)
         
-        if ruta and len(ruta) >1:
+        if ruta and len(ruta) > 1:
             proximo_punto = ruta[1]
             
-            if self.rect.centerx < proximo_punto[0]:
-                self.rect.x += vel
-            elif self.rect.centerx > proximo_punto[0]:
-                self.rect.x -= vel    
-             
-            if self.rect.centery < proximo_punto[1]:
-                self.rect.y += vel
-            elif self.rect.centery > proximo_punto[1]:
-                self.rect.y -= vel
+            dx = proximo_punto[0] - self.rect.centerx
+            dy = proximo_punto[1] - self.rect.centery
+            distancia = math.sqrt(dx**2 + dy**2)
+            
+            if distancia > vel:
+                self.rect.centerx += int((dx / distancia) * vel)
+                self.rect.centery += int((dy / distancia) * vel)
+            else:
+                self.rect.centerx = proximo_punto[0]
+                self.rect.centery = proximo_punto[1]
                 
         else:
             if self.objetivo_x > constantes.ANCHO_VENTANA:
@@ -57,19 +56,11 @@ class Delivery():
             elif self.objetivo_x < 0:
                 self.rect.x -= vel            
                 
-                
-            if self.rect.x > constantes.ANCHO_VENTANA + 50 or self.rect.x  < -50:
+            if self.rect.x > constantes.ANCHO_VENTANA + 50 or self.rect.x < -50:
                 self.completado = True
-                
-        if abs(self.rect.x - self.objetivo_x) <10:
-            pass        
                         
-        
-        
     def update(self):
-        
         cooldown_animacion = 50
-        
         self.image = self.animaciones[self.frame_index]
         
         if pygame.time.get_ticks() - self.update_time > cooldown_animacion:
@@ -82,6 +73,3 @@ class Delivery():
     def dibujar(self, interfaz):
         img_flip = pygame.transform.flip(self.image, self.flip, False)
         interfaz.blit(img_flip, self.rect)
-        
-        
-                                 

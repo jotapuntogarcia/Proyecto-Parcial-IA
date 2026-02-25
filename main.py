@@ -60,7 +60,7 @@ def escalar_img(image, scale):
 
 def generar_posicion_calle():
     entrada = random.randint(0, 2)    
-    y_calle = random.randint(180, constantes.ALTO_VENTANA - 80)
+    y_calle = random.randint(220, constantes.ALTO_VENTANA - 100)
     
     if entrada == 0: #calle izquierda
         x = -50
@@ -69,8 +69,9 @@ def generar_posicion_calle():
         x = constantes.ANCHO_VENTANA + 50
         y = y_calle
     else: #viene de arriba
-        ancho_hueco = constantes.ANCHO_VENTANA - 600
-        x = 300 + (ancho_hueco // 2) 
+        min_x = 350
+        max_x = constantes.ANCHO_VENTANA - 350
+        x = random.randint(min_x, max_x)
         y = -50 # Aparece arriba para bajar por el callejón
         
     return x, y    
