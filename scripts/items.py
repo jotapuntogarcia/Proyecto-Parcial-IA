@@ -1,3 +1,4 @@
+#JUnior Garcia 19-SISN-2-011
 import pygame
 
 class Item(pygame.sprite.Sprite):

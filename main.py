@@ -1,15 +1,16 @@
+#JUnior Garcia 19-SISN-2-011
 import pygame
-import constantes
 import random
 import os
-from personaje import Personaje
-from weapons import Weapon
-from enemigo import Enemigo
-from delivery import Delivery
-from proyectiles import Botella
-from obstaculo import Pared
-from pathfinding import Grilla
-from items import Item
+from scripts import constantes
+from scripts.personaje import Personaje
+from scripts.weapons import Weapon
+from scripts.enemigo import Enemigo
+from scripts.delivery import Delivery
+from scripts.proyectiles import Botella
+from scripts.obstaculo import Pared
+from scripts.pathfinding import Grilla
+from scripts.items import Item
 
 pygame.init() 
 

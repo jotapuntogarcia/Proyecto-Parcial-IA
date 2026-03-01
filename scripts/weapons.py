@@ -1,6 +1,7 @@
+#JUnior Garcia 19-SISN-2-011
 import pygame
 import math
-import constantes
+from scripts import constantes
 import os  
 
 class Bullet(pygame.sprite.Sprite):

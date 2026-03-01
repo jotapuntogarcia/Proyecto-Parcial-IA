@@ -1,7 +1,10 @@
+#JUnior Garcia 19-SISN-2-011
 import pygame
 import math
-import constantes
-from proyectiles import Botella
+from scripts import constantes
+#from proyectiles import Botella
+from scripts.proyectiles import Botella
+
 
 class Nodo:
     def evaluar(self, contexto):

@@ -1,7 +1,7 @@
 # Proyecto-parcial-IA
 
-## Nombre
+## Junior Garcia
 
-## Matrícula
+## 19-SISN-2-011
 
-## Proyecto
+## Muchacho Dembow - Juego de supervivencia

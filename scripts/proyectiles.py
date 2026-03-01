@@ -1,6 +1,7 @@
+#JUnior Garcia 19-SISN-2-011
 import pygame
 import math
-import constantes
+from scripts import constantes
 
 class Botella(pygame.sprite.Sprite):
     def __init__(self, x, y, target_x, target_y, image):
