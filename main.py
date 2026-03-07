@@ -31,7 +31,6 @@ def reproducir_musica(pista):
     if not os.path.exists(pista):
         return
     try:
-        print(f"No se encontró el archivo: {pista}")
         pygame.mixer.music.load(pista)
         pygame.mixer.music.play(-1) #loop infinito
         pygame.mixer.music.set_volume(volumen_musica_fondo)
@@ -60,22 +59,14 @@ def escalar_img(image, scale):
     return nueva_imagen
 
 def generar_posicion_calle():
-    entrada = random.randint(0, 2)    
-    y_calle = random.randint(220, constantes.ALTO_VENTANA - 100)
-    
-    if entrada == 0: #calle izquierda
-        x = -50
-        y = y_calle
-    elif entrada == 1: #calle derecha
-        x = constantes.ANCHO_VENTANA + 50
-        y = y_calle
-    else: #viene de arriba
-        min_x = 350
-        max_x = constantes.ANCHO_VENTANA - 350
-        x = random.randint(min_x, max_x)
-        y = -50 # Aparece arriba para bajar por el callejón
-        
-    return x, y    
+    PUNTOS_SPAWN = [
+        (-50, 430),   #calle izquierda
+        (1330, 430),  #calle derecha
+        (660, -50),   #bajando por la calle arriba
+        (660, 770)    #subiendo calle
+    ]
+    x, y = random.choice(PUNTOS_SPAWN)
+    return x, y
 
 def reiniciar_juego():
     #variables globales
@@ -214,19 +205,18 @@ grupo_paredes = pygame.sprite.Group()
 
 cerebro_ia = Grilla()
 
-#muro
+obstaculos_barrio = [
+    pygame.Rect(0, 0, 560, 340),      # Bloque 1: Colmado El Primo (Arriba Izq)
+    pygame.Rect(760, 0, 520, 340),    # Bloque 2: Casas (Arriba Der)
+    pygame.Rect(0, 520, 420, 200),    # Bloque 3: Casita de madera (Abajo Izq)
+    pygame.Rect(550, 600, 300, 120),  # Bloque 4: Mesas de dominó (Abajo Centro)
+    pygame.Rect(950, 520, 330, 200)   # Bloque 5: Casa de concreto (Abajo Der)
+]
 
-col_x = 9 * constantes.TILE_SIZE
-fila_y = 7 * constantes.TILE_SIZE
+for rect in obstaculos_barrio:
+    nueva_pared = Pared(rect.x, rect.y, rect.width, rect.height)
+    grupo_paredes.add(nueva_pared)
 
-muro_acera_izq = Pared(0, 130, 300, 40) 
-muro_acera_der = Pared(constantes.ANCHO_VENTANA - 300, 130, 300, 40)
-
-# Acera Inferior (El otro lado de la calle)
-muro_abajo = Pared(0, constantes.ALTO_VENTANA - 40, constantes.ANCHO_VENTANA, 40)
-
-# Agregamos todos al grupo
-grupo_paredes.add(muro_acera_izq, muro_acera_der, muro_abajo)
 cerebro_ia.marcar_obstaculos(grupo_paredes)
 
 
@@ -427,9 +417,12 @@ while run:
         
         #dibujar fondo y paredes
         ventana.blit(fondo_redimensionado, (0, 0))
-        cerebro_ia.marcar_obstaculos(grupo_paredes)
         
         jugador.rect.midbottom = jugador.forma.midbottom
+        
+        #dibujar rectángulos rojos (pruebas)
+        for pared in grupo_paredes:
+            pygame.draw.rect(ventana, (255, 0, 0), pared.rect, 2)
         
         #calcular movimeinto jugador
         delta_x = 0
@@ -444,12 +437,13 @@ while run:
         jugador.movimiento(delta_x, delta_y)
         jugador.update()
         
-        #colosionn jugador pared
-        hit_pared = pygame.sprite.spritecollideany(jugador, grupo_paredes)
-        if hit_pared:
-            jugador.forma.x -= delta_x
-            jugador.forma.y -= delta_y
-            jugador.rect.midbottom = jugador.forma.midbottom
+        #colosionn jugador pared mejorada
+        for pared in grupo_paredes:
+            if jugador.forma.colliderect(pared.rect):
+                jugador.forma.x -= delta_x
+                jugador.forma.y -= delta_y
+                jugador.rect.midbottom = jugador.forma.midbottom
+                break 
         
         #actualizar estado de arma
         bala = pistola.update(jugador, disparo_mando, aim_y)
@@ -467,7 +461,7 @@ while run:
             ultimo_delivery = tiempo_actual
             
         #oledas
-        guachis_vivos = [e for e in lista_enemigos if isinstance(e, Enemigo)]
+        guachis_vivos = [e for e in lista_enemigos if type(e) is Enemigo]
         
         if len(guachis_vivos) == 0: 
             numero_oleada += 1
@@ -482,12 +476,12 @@ while run:
         for enemigo in lista_enemigos[:]:
             
             #si los enemigos se quedan fuera de la pantalla se borran
-            if enemigo.rect.x < -100 or enemigo.rect.x > constantes.ANCHO_VENTANA + 100 or \
-               enemigo.rect.y < -100 or enemigo.rect.y > constantes.ALTO_VENTANA + 100:
+            if enemigo.rect.x < -150 or enemigo.rect.x > constantes.ANCHO_VENTANA + 150 or \
+               enemigo.rect.y < -150 or enemigo.rect.y > constantes.ALTO_VENTANA + 150:
                 if pygame.time.get_ticks() - tiempo_inicio_juego > 5000:
                     lista_enemigos.remove(enemigo)
                     continue
-                
+            
             enemigo.move(jugador, cerebro_ia, grupo_paredes)    
                 
             #ataque

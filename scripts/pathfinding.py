@@ -25,10 +25,10 @@ class Grilla:
         self.matriz = [[0 for _ in range(constantes.FILAS)] for _ in range(constantes.COLUMNAS)]
         
         for pared in grupo_paredes:
-            col_inicio = pared.rect.x  // constantes.TILE_SIZE
-            col_fin = (pared.rect.x + pared.rect.width - 1) // constantes.TILE_SIZE
-            fila_inicio = pared.rect.y // constantes.TILE_SIZE
-            fila_fin = (pared.rect.y + pared.rect.height - 1) // constantes.TILE_SIZE
+            col_inicio = int(pared.rect.x // constantes.TILE_SIZE)
+            col_fin = int((pared.rect.x + pared.rect.width - 1) // constantes.TILE_SIZE)
+            fila_inicio = int(pared.rect.y // constantes.TILE_SIZE)
+            fila_fin = int((pared.rect.y + pared.rect.height - 1) // constantes.TILE_SIZE)
             
             #Marcamos todas las paredes dentro de la matriz
             for col in range(col_inicio, col_fin + 1):
@@ -37,7 +37,7 @@ class Grilla:
                         self.matriz[col][fila] = 1
                
     def obtener_nodo(self, x, y):
-        return x // constantes.TILE_SIZE, y // constantes.TILE_SIZE  
+        return int(x // constantes.TILE_SIZE), int(y // constantes.TILE_SIZE)  
     
     def a_estrella(self, inicio_px, fin_px):
         col_inicio = int(inicio_px[0] // constantes.TILE_SIZE)
@@ -45,7 +45,6 @@ class Grilla:
         col_fin = int(fin_px[0] // constantes.TILE_SIZE)
         fila_fin = int(fin_px[1] // constantes.TILE_SIZE)
 
-        # Limitar para que no se salgan de la grilla  (que no se queden arriba)
         col_inicio = max(0, min(col_inicio, constantes.COLUMNAS - 1))
         fila_inicio = max(0, min(fila_inicio, constantes.FILAS - 1))
         col_fin = max(0, min(col_fin, constantes.COLUMNAS - 1))
@@ -54,15 +53,21 @@ class Grilla:
         nodo_inicio = Nodo((col_inicio, fila_inicio))
         nodo_fin = Nodo((col_fin, fila_fin))
         
-        #Forzamos que donde están parados sea 0 para que no se bloqueen a sí mismos
         self.matriz[col_inicio][fila_inicio] = 0
         self.matriz[col_fin][fila_fin] = 0
 
         lista_abierta = []
-        lista_cerrada = []
+        lista_cerrada = set() 
         lista_abierta.append(nodo_inicio)
         
-        while len(lista_abierta) > 0:
+        iteraciones = 0
+        max_iteraciones = 200 
+        
+        mejor_nodo = nodo_inicio 
+        
+        while len(lista_abierta) > 0 and iteraciones < max_iteraciones:
+            iteraciones += 1
+            
             nodo_actual = lista_abierta[0]
             indice_actual = 0
             for index, item in enumerate(lista_abierta):
@@ -71,7 +76,10 @@ class Grilla:
                     indice_actual = index
                                        
             lista_abierta.pop(indice_actual)
-            lista_cerrada.append(nodo_actual)
+            lista_cerrada.add(nodo_actual.pos) 
+            
+            if nodo_actual.h < mejor_nodo.h or iteraciones == 1:
+                mejor_nodo = nodo_actual
             
             if nodo_actual == nodo_fin:
                 camino = []
@@ -88,12 +96,10 @@ class Grilla:
             for nueva_posicion in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                 pos_vecino = (nodo_actual.pos[0] + nueva_posicion[0], nodo_actual.pos[1] + nueva_posicion[1])
                 
-                #limites mapa
                 if pos_vecino[0] >= constantes.COLUMNAS or pos_vecino[0] < 0 or \
                    pos_vecino[1] >= constantes.FILAS or pos_vecino[1] < 0:
                        continue
                    
-                #verificar si es una pared
                 if self.matriz[pos_vecino[0]][pos_vecino[1]] != 0:
                     continue
                 
@@ -101,18 +107,32 @@ class Grilla:
                 hijos.append(nuevo_nodo)
                 
             for hijo in hijos:
-                if hijo in lista_cerrada:
+                if hijo.pos in lista_cerrada:
                     continue
                 
-                #calcular costos
                 hijo.g = nodo_actual.g + 1
-                #Heurística corregida usando nodo_fin
                 hijo.h = ((hijo.pos[0] - nodo_fin.pos[0]) ** 2) + ((hijo.pos[1] - nodo_fin.pos[1]) ** 2)
                 hijo.f = hijo.g + hijo.h
 
-                if any(abierto for abierto in lista_abierta if hijo == abierto and hijo.g > abierto.g):
+                continuar = False
+                for abierto in lista_abierta:
+                    if hijo == abierto and hijo.g > abierto.g:
+                        continuar = True
+                        break
+                if continuar:
                     continue
                 
                 lista_abierta.append(hijo)
                 
-        return []
+        camino_parcial = []
+        actual = mejor_nodo
+        while actual is not None:
+            px_x = actual.pos[0] * constantes.TILE_SIZE + constantes.TILE_SIZE // 2
+            px_y = actual.pos[1] * constantes.TILE_SIZE + constantes.TILE_SIZE // 2
+            camino_parcial.append((px_x, px_y))
+            actual = actual.padre
+            
+        if len(camino_parcial) <= 1:
+            return []
+            
+        return camino_parcial[::-1]
