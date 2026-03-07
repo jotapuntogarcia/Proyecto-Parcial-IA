@@ -60,10 +60,10 @@ def escalar_img(image, scale):
 
 def generar_posicion_calle():
     PUNTOS_SPAWN = [
-        (-50, 430),   #calle izquierda
-        (1330, 430),  #calle derecha
-        (660, -50),   #bajando por la calle arriba
-        (660, 770)    #subiendo calle
+        (10, 430),   #calle izquierda
+        (1230, 430),  #calle derecha
+        (660, 10),   #bajando por la calle arriba
+        (660, 700)    #subiendo calle
     ]
     x, y = random.choice(PUNTOS_SPAWN)
     return x, y
@@ -414,8 +414,8 @@ while run:
         dibujar_game_over(ventana, puntuacion)
 
     elif estado_juego == "JUGANDO":
-        
         #dibujar fondo y paredes
+
         ventana.blit(fondo_redimensionado, (0, 0))
         
         jugador.rect.midbottom = jugador.forma.midbottom
@@ -461,17 +461,19 @@ while run:
             ultimo_delivery = tiempo_actual
             
         #oledas
-        guachis_vivos = [e for e in lista_enemigos if type(e) is Enemigo]
+        guachis_vivos = [e for e in lista_enemigos if not isinstance(e, Delivery)] #ignorar delivey en oleada
         
         if len(guachis_vivos) == 0: 
             numero_oleada += 1
             enemigos_por_oleada += 1 
             
+            if jugador.vida < 100:
+                jugador.vida += 10
+            
             for _ in range(enemigos_por_oleada):
                 x , y = generar_posicion_calle()
                 nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
-                lista_enemigos.append(nuevo_guachi)        
-
+                lista_enemigos.append(nuevo_guachi)                
         #bucle enemigos
         for enemigo in lista_enemigos[:]:
             
