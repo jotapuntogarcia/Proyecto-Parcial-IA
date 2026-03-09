@@ -276,7 +276,7 @@ numero_oleada = 1
 enemigos_por_oleada = 3
 enemigos_pendientes = 0
 ultimo_spawn_enemigo = pygame.time.get_ticks()
-intervalo_spawn = 800
+intervalo_spawn = 600
 
 #fondo
 img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
@@ -482,7 +482,7 @@ while run:
         if enemigos_pendientes > 0 and ahora - ultimo_spawn_enemigo > intervalo_spawn:
             x, y = generar_posicion_calle(solo_horizontal=False)
             nuevo_enemigo = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
-            nuevo_enemigo.velocidad = 1.8 + (numero_oleada * 0.1)
+            nuevo_enemigo.velocidad = 2.2 + (numero_oleada * 0.2)  #velocidad enemigos
             lista_enemigos.append(nuevo_enemigo)
             enemigos_pendientes -= 1
             ultimo_spawn_enemigo = ahora
@@ -525,7 +525,7 @@ while run:
                     puntuacion += 1
                     
                     #probabilidad del salami
-                    if random.random() < 0.6:
+                    if random.random() < 0.4:
                         nuevo_item = Item(enemigo.rect.centerx, enemigo.rect.centery, img_salami)
                         grupo_items.add(nuevo_item)
                         
