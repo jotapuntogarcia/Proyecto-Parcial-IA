@@ -58,20 +58,31 @@ def escalar_img(image, scale):
     nueva_imagen = pygame.transform.scale(image, (int(w*scale), int(h*scale)))
     return nueva_imagen
 
-def generar_posicion_calle():
-    PUNTOS_SPAWN = [
-        (10, 430),   #calle izquierda
-        (1230, 430),  #calle derecha
-        (660, 10),   #bajando por la calle arriba
-        (660, 700)    #subiendo calle
+def generar_posicion_calle(solo_horizontal=False):
+    PUNTOS_HORIZONTALES = [
+        (-80, 430),
+        (constantes.ANCHO_VENTANA + 80, 430),
     ]
-    x, y = random.choice(PUNTOS_SPAWN)
+    PUNTOS_VERTICALES = [
+        (660, -80),
+    ]
+    
+    if solo_horizontal:
+        puntos_posibles = PUNTOS_HORIZONTALES
+    else:
+        puntos_posibles = PUNTOS_HORIZONTALES + PUNTOS_VERTICALES
+        
+    x_base, y_base = random.choice(puntos_posibles)
+    
+    x = x_base + random.randint(-10, 10)
+    y = y_base + random.randint(-10, 10)
+    
     return x, y
 
 def reiniciar_juego():
     #variables globales
-    global puntuacion, numero_oleada, lista_enemigos, grupo_balas, grupo_items, jugador
-    global mover_arriba, mover_abajo, mover_izquierda, mover_derecha
+    global puntuacion, numero_oleada, lista_enemigos, grupo_balas, grupo_items, jugador, enemigos_por_oleada
+    global mover_arriba, mover_abajo, mover_izquierda, mover_derecha, enemigos_pendientes, ultimo_spawn_enemigo
     
     #reiniciar jugador
     jugador.vida = 100
@@ -87,6 +98,9 @@ def reiniciar_juego():
     #Reiniciar stats
     puntuacion = 0
     numero_oleada = 1
+    enemigos_por_oleada = 3
+    enemigos_pendientes = 0
+    ultimo_spawn_enemigo = pygame.time.get_ticks()
     
     lista_enemigos.clear()
     grupo_balas.empty()
@@ -94,9 +108,9 @@ def reiniciar_juego():
     grupo_items.empty()
     
     #crear enemigos iniciales
-    for i in range (3):
-        x, y = generar_posicion_calle()
-        nuevo_guachi = Enemigo (x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+    for i in range (enemigos_por_oleada):
+        x, y = generar_posicion_calle(solo_horizontal=False)
+        nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
         lista_enemigos.append(nuevo_guachi)
 
 def dibujar_menu(ventana):
@@ -190,15 +204,11 @@ for i in range (5):
     animaciones_delivery.append(img)
     
 ultimo_delivery = pygame.time.get_ticks()    
-    
-    
 
 #crear arma clase weapon
-
 pistola = Weapon(imagen_pistola, imagen_balas)
 
 #crear grupo de sprites
-
 grupo_balas = pygame.sprite.Group()
 grupo_botellas_enemigas = pygame.sprite.Group()
 grupo_paredes = pygame.sprite.Group()
@@ -224,30 +234,23 @@ cerebro_ia.marcar_obstaculos(grupo_paredes)
 jugador = Personaje(50, 50, animaciones)
 jugador.rect = jugador.forma # CORRECCION: Referencia necesaria para spritecollideany
 
-
-
 #variables movimientos jugador
-
 mover_arriba = False
 mover_abajo = False
 mover_izquierda = False
 mover_derecha = False
 
 #controlar framerate
-    
 reloj = pygame.time.Clock()
 
-
 #para que los enemigos aparezcan despues de iniciar
-    
 lista_enemigos = []
 for i in range (3):
-    x, y = generar_posicion_calle()
+    x, y = generar_posicion_calle(solo_horizontal=False)
     nuevo_guachi = Enemigo (x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
     lista_enemigos.append(nuevo_guachi)
 
 #esperar un tiempo antes de que empiecen a aparecer
-
 tiempo_inicio_juego = pygame.time.get_ticks()
 delay_inicial = 2000
 
@@ -269,24 +272,23 @@ def dibujar_vida(interfaz, x, y, vida):
     pygame.draw.rect(interfaz, (255, 0, 0), (x, y, 200 * ratio, 20))
 
 #oleadas
-
 numero_oleada = 1
 enemigos_por_oleada = 3
+enemigos_pendientes = 0
+ultimo_spawn_enemigo = pygame.time.get_ticks()
+intervalo_spawn = 800
 
 #fondo
-
 img_fondo = pygame.image.load("assets/images/background/fondo.png").convert()
 fondo_redimensionado = pygame.transform.scale(img_fondo, (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
 
 #salami
-
 img_salami = pygame.image.load("assets/images/icons/salami.png").convert_alpha()
 img_salami = escalar_img(img_salami, 0.6)
 
 grupo_items = pygame.sprite.Group()
 
 #contador de bajas
-
 fuente_score = pygame.font.SysFont("Comic Sans", 30, bold=True)  #COMIC SANS!
 puntuacion= 0
 
@@ -421,8 +423,8 @@ while run:
         jugador.rect.midbottom = jugador.forma.midbottom
         
         #dibujar rectángulos rojos (pruebas)
-        for pared in grupo_paredes:
-            pygame.draw.rect(ventana, (255, 0, 0), pared.rect, 2)
+        #for pared in grupo_paredes:
+            #pygame.draw.rect(ventana, (255, 0, 0), pared.rect, 2)
         
         #calcular movimeinto jugador
         delta_x = 0
@@ -452,29 +454,39 @@ while run:
             
         grupo_balas.update() #esto mueve las balas
             
-        #generar enemigos
         tiempo_actual = pygame.time.get_ticks()    
             
         if tiempo_actual - ultimo_delivery > 5000: #5 segundos cada uno
-            nuevo_delivery = Delivery(animaciones_delivery)
+            x_del, y_del = generar_posicion_calle(solo_horizontal=True)
+            nuevo_delivery = Delivery(x_del, y_del, animaciones_delivery)
             lista_enemigos.append(nuevo_delivery)
             ultimo_delivery = tiempo_actual
             
-        #oledas
-        guachis_vivos = [e for e in lista_enemigos if not isinstance(e, Delivery)] #ignorar delivey en oleada
+        guachis_vivos = [e for e in lista_enemigos if not isinstance(e, Delivery)]
         
-        if len(guachis_vivos) == 0: 
+        for g in guachis_vivos:
+            if g.rect.x < -200 or g.rect.x > constantes.ANCHO_VENTANA + 200:
+                lista_enemigos.remove(g)
+                guachis_vivos.remove(g)
+
+        if len(guachis_vivos) == 0 and enemigos_pendientes == 0: 
             numero_oleada += 1
-            enemigos_por_oleada += 1 
+            enemigos_por_oleada += 1
+            enemigos_pendientes = enemigos_por_oleada
             
-            if jugador.vida < 100:
-                jugador.vida += 10
+            jugador.vida = min(100, jugador.vida + 20)
             
-            for _ in range(enemigos_por_oleada):
-                x , y = generar_posicion_calle()
-                nuevo_guachi = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
-                lista_enemigos.append(nuevo_guachi)                
-        #bucle enemigos
+            print(f"Oleada {numero_oleada} iniciada con {enemigos_por_oleada} enemigos.")
+            
+        ahora = pygame.time.get_ticks()
+        if enemigos_pendientes > 0 and ahora - ultimo_spawn_enemigo > intervalo_spawn:
+            x, y = generar_posicion_calle(solo_horizontal=False)
+            nuevo_enemigo = Enemigo(x, y, animaciones_enemigo, animaciones_ataque_guachi, img_botella)
+            nuevo_enemigo.velocidad = 1.8 + (numero_oleada * 0.1)
+            lista_enemigos.append(nuevo_enemigo)
+            enemigos_pendientes -= 1
+            ultimo_spawn_enemigo = ahora
+        
         for enemigo in lista_enemigos[:]:
             
             #si los enemigos se quedan fuera de la pantalla se borran
@@ -513,7 +525,7 @@ while run:
                     puntuacion += 1
                     
                     #probabilidad del salami
-                    if random.random() < 0.4:
+                    if random.random() < 0.6:
                         nuevo_item = Item(enemigo.rect.centerx, enemigo.rect.centery, img_salami)
                         grupo_items.add(nuevo_item)
                         
@@ -536,7 +548,7 @@ while run:
         
         hit = pygame.sprite.spritecollideany(jugador, grupo_botellas_enemigas)
         if hit:
-            jugador.vida -= 15
+            jugador.vida -= 10
             hit.kill()
                 
         grupo_balas.draw(ventana)
